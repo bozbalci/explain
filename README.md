@@ -13,6 +13,7 @@ It features:
 
 The project was built using the following tooling, earlier versions are not tested:
 
+* CMake >= 3.13
 * C++ compiler with C++17 core language support (gcc >= 7.1 or Clang >= 5.0)
 * flex >= 2.5.35
 * bison >= 2.3
