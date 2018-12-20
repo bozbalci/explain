@@ -4,8 +4,7 @@
 
 namespace explain {
 
-BlockStatement::BlockStatement(StatementList stmts)
-    : stmts(std::move(stmts))
+BlockStatement::BlockStatement()
 {
     ;
 }
@@ -28,6 +27,12 @@ void
 BlockStatement::accept(Visitor &visitor)
 {
     visitor.visit(this);
+}
+
+void
+BlockStatement::createStatement(Statement *stmt)
+{
+    stmts.push_back(stmt);
 }
 
 }

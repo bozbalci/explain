@@ -1,6 +1,12 @@
 #ifndef EXPLAIN_CONDITIONALUNARYOP_H
 #define EXPLAIN_CONDITIONALUNARYOP_H
 
+#include <string>
+
+#include <llvm/IR/Value.h>
+
+#include "../../Visitor/Visitor.h"
+#include "../Misc/Operator.h"
 #include "Conditional.h"
 
 namespace explain {

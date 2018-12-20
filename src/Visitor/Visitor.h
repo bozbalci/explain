@@ -1,21 +1,6 @@
 #ifndef EXPLAIN_VISITOR_H
 #define EXPLAIN_VISITOR_H
 
-#include "../../AST/Conditional/ConditionalBinaryOp.h"
-#include "../../AST/Conditional/ConditionalCompOp.h"
-#include "../../AST/Conditional/ConditionalUnaryOp.h"
-#include "../../AST/Function/FunctionDeclaration.h"
-#include "../../AST/Expression/Expression.h"
-#include "../../AST/Expression/ExpressionBinaryOp.h"
-#include "../../AST/Statement/AssignmentStatement.h"
-#include "../../AST/Statement/BlockStatement.h"
-#include "../../AST/Statement/IfStatement.h"
-#include "../../AST/Statement/IOStatement.h"
-#include "../../AST/Statement/ReturnStatement.h"
-#include "../../AST/Statement/Statement.h"
-#include "../../AST/Statement/WhileStatement.h"
-#include "../../AST/Identifier/Identifier.h"
-
 namespace explain {
 
 class AssignmentStatement;

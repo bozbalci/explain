@@ -1,6 +1,12 @@
-#ifndef EXPLAIN_CONDITIONALCOMPARISIONOP_H
-#define EXPLAIN_CONDITIONALCOMPARISIONOP_H
+#ifndef EXPLAIN_CONDITIONALCOMPOP_H
+#define EXPLAIN_CONDITIONALCOMPOP_H
 
+#include <string>
+
+#include <llvm/IR/Value.h>
+
+#include "../../Visitor/Visitor.h"
+#include "../Misc/Operator.h"
 #include "Conditional.h"
 
 namespace explain {
@@ -21,4 +27,4 @@ public:
 
 }
 
-#endif //EXPLAIN_CONDITIONALCOMPARISIONOP_H
+#endif //EXPLAIN_CONDITIONALCOMPOP_H

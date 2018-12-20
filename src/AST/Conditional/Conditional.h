@@ -2,7 +2,7 @@
 #define EXPLAIN_CONDITIONAL_H
 
 #include "../ASTNode.h"
-#include "../Misc/Operator.h"
+#include "../../Visitor/Visitor.h"
 
 namespace explain {
 

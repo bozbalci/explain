@@ -1,6 +1,7 @@
 #ifndef EXPLAIN_IOSTATEMENT_H
 #define EXPLAIN_IOSTATEMENT_H
 
+#include "../Misc/Operator.h"
 #include "Statement.h"
 
 namespace explain {

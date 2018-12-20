@@ -1,48 +1,69 @@
-%code requires {
-#define YYLTYPE_IS_DECLARED 1
-}
-
 %{
 #include <stdio.h>
 
-#include "AST/ASTNode.h"
+#include "../src/AST/Conditional/Conditional.h"
+#include "../src/AST/Conditional/ConditionalBinaryOp.h"
+#include "../src/AST/Conditional/ConditionalCompOp.h"
+#include "../src/AST/Conditional/ConditionalUnaryOp.h"
+#include "../src/AST/Expression/Expression.h"
+#include "../src/AST/Expression/ExpressionBinaryOp.h"
+#include "../src/AST/Identifier/Identifier.h"
+#include "../src/AST/Misc/Operator.h"
+#include "../src/AST/Statement/AssignmentStatement.h"
+#include "../src/AST/Statement/IOStatement.h"
+#include "../src/AST/Statement/IfStatement.h"
+#include "../src/AST/Statement/ReturnStatement.h"
+#include "../src/AST/Statement/Statement.h"
+#include "../src/AST/Statement/WhileStatement.h"
 
 extern int yylex();
 int yyerror(const char *s);
 
-}%
+
+%}
 
 %union {
-    explain::ASTNode *node;
-    explain::FunctionDeclaration *func_decl;
+    explain::BlockStatement *block;
     explain::Statement *stmt;
-    explain::Expression *expr;
+
     explain::Identifier *ident;
+    explain::Expression *expr;
+    explain::Conditional *cond;
 
-    std::string raw;
+    explain::Operator op;
+
+    std::string string;
     int token;
-}%
+}
 
-%token <string> TID
-%token <expr> TNUM
-
+%token <string> TID TNUM
 %token <token> TIF TELSE TENDI TWHILE TENDW TFUN TENDF
 %token <token> TOR TAND TRETURN TINPUT TOUTPUT
-%token <token> TSCOL TDOT TLPAR TRPAR TCOMMA TASSIGN TPLUS TMINUS TTIMES TDIV
-%token <token> TLT TLT_EQ TEQ TGT_EQ TGT TNOT
+%token <token> TSCOL TLPAR TRPAR TCOMMA TASSIGN TPLUS TMINUS TTIMES TDIV
+%token <token> TLT TLTEQ TEQ TGTEQ TGT TNOT
+
+%type <ident> ident
+%type <block> block_stmt
+%type <stmt> assignment_stmt if_stmt while_stmt return_stmt io_stmt
+%type <expr> expr expr_binop
+%type <cond> cond cond_unop cond_binop cond_compop
+%type <op> comp_op
 
 /* Operator precedence for mathematical operators */
 %left TPLUS TMINUS
 %left TTIMES TDIV
-%left TAND TNOT
+
+/* Operator precedence for logical operators */
+%left TAND
+%left TOR
+%left TNOT
 
 %start file_input
 
 %%
 
 file_input
-    : /* blank */
-    | entries
+    : entries
     ;
 
 
@@ -68,18 +89,25 @@ stmt
 
 
 block_stmt
-    : stmt TSCOL
+    : stmt TSCOL        { $$ = new explain::BlockStatement();
+                          $$->createStatement($<stmt>1); }
     | block_stmt stmt TSCOL
+                        { $1->createStatement($<stmt>2); }
+    ;
+
+
+ident
+    : TID               { $$ = new explain::Identifier($1); }
     ;
 
 
 func_decl
-    : TFUN TID TLPAR func_decl_args TRPAR block_stmt TENDF
+    : TFUN ident TLPAR func_decl_args TRPAR block_stmt TENDF
     ;
 
 
 func_call
-    : TID TLPAR func_call_args TRPAR
+    : ident TLPAR func_call_args TRPAR
     ;
 
 
@@ -96,37 +124,27 @@ func_call_args
 
 
 decl_arg_list
-    : decl_arg
-    | decl_arg_list TCOMMA decl_arg
+    : ident
+    | decl_arg_list TCOMMA ident
     ;
 
 
 call_arg_list
-    : call_arg
-    | call_arg_list TCOMMA call_arg
-    ;
-
-
-decl_arg
-    : TID
-    ;
-
-
-call_arg
     : expr
+    | call_arg_list TCOMMA expr
     ;
 
 
 assignment_stmt
-    : TID TASSIGN expr  { $$ = new explain::AssignmentStatement($1, $3); }
+    : ident TASSIGN expr  { $$ = new explain::AssignmentStatement($1, $3); }
     ;
 
 
 if_stmt
     : TIF cond block_stmt TELSE block_stmt TENDI
-                        { $$ = new explain::IfStatement($2, $3, $4); }
+                        { $$ = new explain::IfStatement($2, $3, $5);      }
     | TIF cond block_stmt TENDI
-                        { $$ = new explain::IfStatement($2, $3, nullptr);
+                        { $$ = new explain::IfStatement($2, $3, nullptr); };
     ;
 
 
@@ -142,39 +160,44 @@ return_stmt
 
 
 io_stmt
-    : TINPUT TID        { $$ = new explain::IOStatement(Operator::INPUT,  $2); }
-    | TOUTPUT TID       { $$ = new explain::IOStatement(Operator::OUTPUT, $2); }
+    : TINPUT ident      { $$ = new explain::IOStatement(explain::Operator::INPUT,  $2); }
+    | TOUTPUT ident     { $$ = new explain::IOStatement(explain::Operator::OUTPUT, $2); }
     ;
 
 
 expr
     : func_call
-    | TID
+    | ident
     | TNUM
     | TLPAR expr TRPAR  { $$ = $2; }
-    | expr_binop        { $$ = $1; }
+    | expr_binop
     ;
 
 
 expr_binop
-    : expr TPLUS expr   { $$ = new explain::ExpressionBinaryOp(Operator::ADD,      $1, $3); }
-    | expr TMINUS expr  { $$ = new explain::ExpressionBinaryOp(Operator::SUBTRACT, $1, $3); }
-    | expr TTIMES expr  { $$ = new explain::ExpressionBinaryOp(Operator::MULTIPLY, $1, $3); }
-    | expr TDIV expr    { $$ = new explain::ExpressionBinaryOp(Operator::DIVIDE,   $1, $3); }
+    : expr TPLUS expr   { $$ = new explain::ExpressionBinaryOp(explain::Operator::ADD,      $1, $3); }
+    | expr TMINUS expr  { $$ = new explain::ExpressionBinaryOp(explain::Operator::SUBTRACT, $1, $3); }
+    | expr TTIMES expr  { $$ = new explain::ExpressionBinaryOp(explain::Operator::MULTIPLY, $1, $3); }
+    | expr TDIV expr    { $$ = new explain::ExpressionBinaryOp(explain::Operator::DIVIDE,   $1, $3); }
     ;
 
 
 cond
     : TLPAR cond TRPAR  { $$ = $2; }
-    | cond_unop         { $$ = $1; }
-    | cond_binop        { $$ = $1; }
-    | cond_compop       { $$ = $1; }
+    | cond_unop
+    | cond_binop
+    | cond_compop
+    ;
+
+
+cond_unop
+    : TNOT cond         { $$ = new explain::ConditionalUnaryOp(explain::Operator::NOT, $2); }
     ;
 
 
 cond_binop
-    : cond TAND cond    { $$ = new explain::ConditionalBinaryOp(Operator::AND, $1, $3); }
-    | cond TOR cond     { $$ = new explain::ConditionalBinaryOp(Operator::OR,  $1, $3); }
+    : cond TAND cond    { $$ = new explain::ConditionalBinaryOp(explain::Operator::AND, $1, $3); }
+    | cond TOR cond     { $$ = new explain::ConditionalBinaryOp(explain::Operator::OR,  $1, $3); }
     ;
 
 
@@ -183,17 +206,12 @@ cond_compop
     ;
 
 
-cond_unop
-    : TNOT cond         { $$ = new explain::ConditionalUnaryOp(Operator::NOT, $1); }
-    ;
-
-
 comp_op
-    : TLT               { $$ = Operator::LT;   }
-    | TLTEQ             { $$ = Operator::LTEQ; }
-    | TEQ               { $$ = Operator::EQ;   }
-    | TGTEQ             { $$ = Operator::GTEQ; }
-    | TGT               { $$ = Operator::GT;   }
+    : TLT               { $$ = explain::Operator::LT;   }
+    | TLTEQ             { $$ = explain::Operator::LTEQ; }
+    | TEQ               { $$ = explain::Operator::EQ;   }
+    | TGTEQ             { $$ = explain::Operator::GTEQ; }
+    | TGT               { $$ = explain::Operator::GT;   }
     ;
 
 %%

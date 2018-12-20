@@ -1,13 +1,12 @@
 cmake_minimum_required(VERSION 3.13)
 project(explain)
 
-# Path to LLVM libraries installed by Homebrew on macOS 10.14
-set(CMAKE_PREFIX_PATH /usr/local/opt/llvm)
+set(CMAKE_PREFIX_PATH /usr/local/opt/bison/)
 
 # Set up project dependencies
-find_package(FLEX REQUIRED)
-find_package(BISON REQUIRED)
-find_package(LLVM REQUIRED CONFIG)
+find_package(FLEX 2.5 REQUIRED)
+find_package(BISON 3.2 REQUIRED)
+find_package(LLVM 7.0 REQUIRED)
 
 message(STATUS "Found flex ${FLEX_VERSION} at: ${FLEX_EXECUTABLE}")
 message(STATUS "Found bison ${BISON_VERSION} at: ${BISON_EXECUTABLE}")
@@ -68,7 +67,7 @@ add_definitions(${LLVM_DEFINITIONS})
 # Get required LLVM libraries
 llvm_map_components_to_libnames(LLVM_LIBS core)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
