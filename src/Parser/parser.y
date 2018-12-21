@@ -1,5 +1,13 @@
-%{
-#include <stdio.h>
+%skeleton "lalr1.cc"
+%require "3.2"
+
+%define api.token.constructor
+%define api.value.type variant
+%define parse.assert
+%define parse.trace
+%define parse.error verbose
+
+%code requires {
 
 #include "../src/AST/Conditional/Conditional.h"
 #include "../src/AST/Conditional/ConditionalBinaryOp.h"
@@ -16,38 +24,30 @@
 #include "../src/AST/Statement/Statement.h"
 #include "../src/AST/Statement/WhileStatement.h"
 
+}
+
+%{
+#include <stdio.h>
+
+
 extern int yylex();
 int yyerror(const char *s);
 
 
 %}
 
-%union {
-    explain::BlockStatement *block;
-    explain::Statement *stmt;
-
-    explain::Identifier *ident;
-    explain::Expression *expr;
-    explain::Conditional *cond;
-
-    explain::Operator op;
-
-    std::string string;
-    int token;
-}
-
-%token <string> TID TNUM
+%token <std::string> TID TNUM
 %token <token> TIF TELSE TENDI TWHILE TENDW TFUN TENDF
 %token <token> TOR TAND TRETURN TINPUT TOUTPUT
 %token <token> TSCOL TLPAR TRPAR TCOMMA TASSIGN TPLUS TMINUS TTIMES TDIV
 %token <token> TLT TLTEQ TEQ TGTEQ TGT TNOT
 
-%type <ident> ident
-%type <block> block_stmt
-%type <stmt> assignment_stmt if_stmt while_stmt return_stmt io_stmt
-%type <expr> expr expr_binop
-%type <cond> cond cond_unop cond_binop cond_compop
-%type <op> comp_op
+%type <explain::Identifier *> ident
+%type <explain::BlockStatement *> block_stmt
+%type <explain::Statement *> assignment_stmt if_stmt while_stmt return_stmt io_stmt
+%type <explain::Expression *> expr expr_binop
+%type <explain::Conditional *> cond cond_unop cond_binop cond_compop
+%type <explain::Operator> comp_op
 
 /* Operator precedence for mathematical operators */
 %left TPLUS TMINUS

@@ -5,17 +5,29 @@ set(CMAKE_PREFIX_PATH /usr/local/opt/bison/)
 
 # Set up project dependencies
 find_package(FLEX 2.5 REQUIRED)
-find_package(BISON 3.2 REQUIRED)
+find_package(BISON 3.2)
 find_package(LLVM 7.0 REQUIRED)
+
+# TODO Get rid of this ugly hack
+set(MACOS_OVERRIDE_BISON_PATH /usr/local/opt/bison/bin/bison)
+if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+    if(EXISTS ${MACOS_OVERRIDE_BISON_PATH})
+        set(BISON_EXECUTABLE ${MACOS_OVERRIDE_BISON_PATH})
+        set(BISON_VERSION 3.2)
+        message(STATUS "Overriding system bison found at: ${MACOS_OVERRIDE_BISON_PATH}")
+        message(WARNING "*IMPORTANT* Do NOT rely on the Bison version stated in build messages!\n"
+                        "You are using Bison >= 3.2 installed by Homebrew.")
+    endif()
+endif()
 
 message(STATUS "Found flex ${FLEX_VERSION} at: ${FLEX_EXECUTABLE}")
 message(STATUS "Found bison ${BISON_VERSION} at: ${BISON_EXECUTABLE}")
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION} at: ${LLVM_DIR}")
 
 # Set up flex and bison dependency
-FLEX_TARGET(Scanner src/Parser/tokens.l ${CMAKE_CURRENT_BINARY_DIR}/tokens.cc)
-BISON_TARGET(Parser src/Parser/parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cc)
-ADD_FLEX_BISON_DEPENDENCY(Scanner Parser)
+flex_target(Scanner src/Parser/tokens.l ${CMAKE_CURRENT_BINARY_DIR}/tokens.cc)
+bison_target(Parser src/Parser/parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cc)
+add_flex_bison_dependency(Scanner Parser)
 
 # Set up sources and headers
 set(SOURCE_COMMON
