@@ -37,8 +37,14 @@ set(SOURCE_COMMON
         src/AST/Conditional/ConditionalUnaryOp.cc
         src/AST/Expression/Expression.cc
         src/AST/Expression/ExpressionBinaryOp.cc
+        src/AST/Expression/ExpressionFunctionCall.cc
+        src/AST/Expression/ExpressionIdentifier.cc
+        src/AST/Expression/ExpressionLiteral.cc
+        src/AST/Expression/ExpressionLiteral.cc
         src/AST/Function/FunctionDeclaration.cc
         src/AST/Identifier/Identifier.cc
+        src/AST/Misc/ActualParameterList.cc
+        src/AST/Misc/FormalParameterList.cc
         src/AST/Statement/AssignmentStatement.cc
         src/AST/Statement/BlockStatement.cc
         src/AST/Statement/IOStatement.cc
@@ -60,8 +66,12 @@ set(HEADER_COMMON
         src/AST/Conditional/ConditionalUnaryOp.h
         src/AST/Expression/Expression.h
         src/AST/Expression/ExpressionBinaryOp.h
+        src/AST/Expression/ExpressionIdentifier.h
+        src/AST/Expression/ExpressionLiteral.h
         src/AST/Function/FunctionDeclaration.h
         src/AST/Identifier/Identifier.h
+        src/AST/Misc/ActualParameterList.h
+        src/AST/Misc/FormalParameterList.h
         src/AST/Misc/Operator.h
         src/AST/Statement/AssignmentStatement.h
         src/AST/Statement/BlockStatement.h

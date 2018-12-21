@@ -1,6 +1,8 @@
 %skeleton "lalr1.cc"
 %require "3.2"
 
+%defines
+
 %define api.token.constructor
 %define api.value.type variant
 %define parse.assert
@@ -15,6 +17,9 @@
 #include "../src/AST/Conditional/ConditionalUnaryOp.h"
 #include "../src/AST/Expression/Expression.h"
 #include "../src/AST/Expression/ExpressionBinaryOp.h"
+#include "../src/AST/Expression/ExpressionFunctionCall.h"
+#include "../src/AST/Expression/ExpressionIdentifier.h"
+#include "../src/AST/Expression/ExpressionLiteral.h"
 #include "../src/AST/Identifier/Identifier.h"
 #include "../src/AST/Misc/Operator.h"
 #include "../src/AST/Statement/AssignmentStatement.h"
@@ -28,11 +33,10 @@
 
 %{
 #include <stdio.h>
-
+#include <cstdlib>
 
 extern int yylex();
 int yyerror(const char *s);
-
 
 %}
 
@@ -103,35 +107,41 @@ ident
 
 func_decl
     : TFUN ident TLPAR func_decl_args TRPAR block_stmt TENDF
+                        { $$ = new explain::FunctionDeclaration($2, $4, $6); }
     ;
 
 
 func_call
     : ident TLPAR func_call_args TRPAR
+                        { $$ = new explain::ExpressionFunctionCall($1, $3); }
     ;
 
 
 func_decl_args
-    : /* no argument */
+    : /* no argument */ { $$ = new explain::FormalParameterList(); }
     | decl_arg_list
     ;
 
 
 func_call_args
-    : /* no argument */
+    : /* no argument */ { $$ = new explain::ActualParameterList(); }
     | call_arg_list
     ;
 
 
 decl_arg_list
-    : ident
+    : ident             { $$ = new explain::FormalParameterList();
+                          $$->addParameter($1); }
     | decl_arg_list TCOMMA ident
+                        { $1->addParameter($3); }
     ;
 
 
 call_arg_list
-    : expr
+    : expr              { $$ = new explain::ActualParameterList();
+                          $$->addParameter($1); }
     | call_arg_list TCOMMA expr
+                        { $1->addParameter($3); }
     ;
 
 
@@ -144,7 +154,7 @@ if_stmt
     : TIF cond block_stmt TELSE block_stmt TENDI
                         { $$ = new explain::IfStatement($2, $3, $5);      }
     | TIF cond block_stmt TENDI
-                        { $$ = new explain::IfStatement($2, $3, nullptr); };
+                        { $$ = new explain::IfStatement($2, $3, nullptr); }
     ;
 
 
@@ -167,8 +177,8 @@ io_stmt
 
 expr
     : func_call
-    | ident
-    | TNUM
+    | ident             { $$ = new explain::ExpressionIdentifier($1);                }
+    | TNUM              { $$ = new explain::ExpressionLiteral(std::atof($1.c_str()); }
     | TLPAR expr TRPAR  { $$ = $2; }
     | expr_binop
     ;

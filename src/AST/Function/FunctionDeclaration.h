@@ -5,7 +5,6 @@
 
 namespace explain {
 
-using IdentifierList = std::vector<Identifier *>;
 
 class FunctionDeclaration : public ASTNode
 {

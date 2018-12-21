@@ -3,6 +3,7 @@
 
 namespace explain {
 
+class ActualParameterList;
 class AssignmentStatement;
 class BlockStatement;
 class Conditional;
@@ -11,17 +12,22 @@ class ConditionalCompOp;
 class ConditionalUnaryOp;
 class Expression;
 class ExpressionBinaryOp;
-class IfStatement;
+class ExpressionFunctionCall;
+class ExpressionIdentifier;
+class ExpressionLiteral;
+class FormalParameterList;
+class FunctionDeclaration;
 class IOStatement;
+class Identifier;
+class IfStatement;
 class ReturnStatement;
 class Statement;
-class FunctionDeclaration;
 class WhileStatement;
-class Identifier;
 
 class Visitor
 {
 public:
+    virtual void visit(ActualParameterList *) = 0;
     virtual void visit(AssignmentStatement *) = 0;
     virtual void visit(BlockStatement *) = 0;
     virtual void visit(Conditional *) = 0;
@@ -30,13 +36,16 @@ public:
     virtual void visit(ConditionalUnaryOp *) = 0;
     virtual void visit(Expression *) = 0;
     virtual void visit(ExpressionBinaryOp *) = 0;
-    virtual void visit(IfStatement *) = 0;
+    virtual void visit(ExpressionFunctionCall *) = 0;
+    virtual void visit(ExpressionIdentifier *) = 0;
+    virtual void visit(ExpressionLiteral *) = 0;
+    virtual void visit(FormalParameterList *) = 0;
+    virtual void visit(FunctionDeclaration *) = 0;
     virtual void visit(IOStatement *) = 0;
+    virtual void visit(IfStatement *) = 0;
     virtual void visit(ReturnStatement *) = 0;
     virtual void visit(Statement *) = 0;
     virtual void visit(WhileStatement *) = 0;
-    virtual void visit(FunctionDeclaration *) = 0;
-    virtual void visit(Identifier *) = 0;
 };
 
 }

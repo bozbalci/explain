@@ -12,7 +12,6 @@
 
 namespace explain {
 
-using StatementList = std::vector<Statement *>;
 
 class BlockStatement : public ASTNode
 {
