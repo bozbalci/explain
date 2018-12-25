@@ -3,6 +3,7 @@
 
 namespace explain {
 
+class ASTRoot;
 class ActualParameterList;
 class AssignmentStatement;
 class BlockStatement;
@@ -10,6 +11,7 @@ class Conditional;
 class ConditionalBinaryOp;
 class ConditionalCompOp;
 class ConditionalUnaryOp;
+class Entry;
 class Expression;
 class ExpressionBinaryOp;
 class ExpressionFunctionCall;
@@ -27,6 +29,7 @@ class WhileStatement;
 class Visitor
 {
 public:
+    virtual void visit(ASTRoot *) = 0;
     virtual void visit(ActualParameterList *) = 0;
     virtual void visit(AssignmentStatement *) = 0;
     virtual void visit(BlockStatement *) = 0;
@@ -34,6 +37,7 @@ public:
     virtual void visit(ConditionalBinaryOp *) = 0;
     virtual void visit(ConditionalCompOp *) = 0;
     virtual void visit(ConditionalUnaryOp *) = 0;
+    virtual void visit(Entry *) = 0;
     virtual void visit(Expression *) = 0;
     virtual void visit(ExpressionBinaryOp *) = 0;
     virtual void visit(ExpressionFunctionCall *) = 0;
@@ -42,6 +46,7 @@ public:
     virtual void visit(FormalParameterList *) = 0;
     virtual void visit(FunctionDeclaration *) = 0;
     virtual void visit(IOStatement *) = 0;
+    virtual void visit(Identifier *) = 0;
     virtual void visit(IfStatement *) = 0;
     virtual void visit(ReturnStatement *) = 0;
     virtual void visit(Statement *) = 0;

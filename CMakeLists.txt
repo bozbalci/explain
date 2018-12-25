@@ -56,7 +56,7 @@ set(SOURCE_COMMON
         src/Parser/tokens.l
         src/Visitor/Visitor.cc
         src/main.cc
-)
+        src/AST/Entry.cc src/AST/ASTRoot.cc)
 
 set(HEADER_COMMON
         src/AST/ASTNode.h
@@ -81,7 +81,7 @@ set(HEADER_COMMON
         src/AST/Statement/Statement.h
         src/AST/Statement/WhileStatement.h
         src/Visitor/Visitor.h
-)
+        src/AST/Entry.h src/AST/ASTRoot.h)
 
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})

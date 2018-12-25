@@ -1,76 +1,58 @@
-%{
-#define YYERROR_VERBOSE 1
+%{ /* -*- C++ -*- */
+    #include <cerrno>
+    #include <climits>
+    #include <cstdlib>
+    #include <cstring>
+    #include <string>
 
-#include <string>
-#include <stack>
+    #include "parser.hh"
 
-#include "../src/AST/Conditional/Conditional.h"
-#include "../src/AST/Conditional/ConditionalBinaryOp.h"
-#include "../src/AST/Conditional/ConditionalCompOp.h"
-#include "../src/AST/Conditional/ConditionalUnaryOp.h"
-#include "../src/AST/Expression/Expression.h"
-#include "../src/AST/Expression/ExpressionBinaryOp.h"
-#include "../src/AST/Identifier/Identifier.h"
-#include "../src/AST/Misc/Operator.h"
-#include "../src/AST/Statement/AssignmentStatement.h"
-#include "../src/AST/Statement/IOStatement.h"
-#include "../src/AST/Statement/IfStatement.h"
-#include "../src/AST/Statement/ReturnStatement.h"
-#include "../src/AST/Statement/Statement.h"
-#include "../src/AST/Statement/WhileStatement.h"
+    // Code run each time a pattern is matched
+    #define YY_USER_ACTION loc.columns(yyleng);
 
-#include "parser.hh"
-
-#define SAVE_TOKEN yylval.string = new std::string(yytext, yyleng)
-#define TOKEN(t) (yylval.token = t)
-
-int yycolumn = 1;
-extern "C" int yywrap { return 1; }
-
-int
-yyerror(const char *s)
-{
-    printf("error %s in '%s' at line %d, column %d\n",
-        yytext, yylineno, yycolumn);
-
-    printf("\tparsed loc %d.%d-%d.%d\n",
-        yyloc.first_line, yyloc.first_column,
-        yyloc.last_line, yyloc.last_column);
-
-    return 1;
-}
+    yy::location& loc = drv.location;
+    loc.step();
 %}
 
+%option noyywrap nounput noinput batch debug
+
 %%
-[ \t\r\n]+  /* ignored */;
-"if"                return TOKEN(TIF);
-"else"              return TOKEN(TELSE);
-"endi"              return TOKEN(TENDI);
-"while"             return TOKEN(TWHILE);
-"endw"              return TOKEN(TENDW);
-"fun"               return TOKEN(TFUN);
-"endf"              return TOKEN(TENDF);
-"or"                return TOKEN(TOR);
-"and"               return TOKEN(TAND);
-"return"            return TOKEN(TRETURN);
-"input"             return TOKEN(TINPUT);
-"output"            return TOKEN(TOUTPUT);
-[a-zA-Z]+           SAVE_TOKEN; return TOKEN(TID);
-[0-9]*\.?[0-9]+     SAVE_TOKEN; return TOKEN(TNUM);
-";"                 return TOKEN(TSCOL);
-"("                 return TOKEN(TLPAR);
-")"                 return TOKEN(TRPAR);
-","                 return TOKEN(TCOMMA);
-":="                return TOKEN(TASSIGN);
-"+"                 return TOKEN(TPLUS);
-"-"                 return TOKEN(TMINUS);
-"*"                 return TOKEN(TTIMES);
-"/"                 return TOKEN(TDIV);
-"<"                 return TOKEN(TLT);
-"<="                return TOKEN(TLTEQ);
-"=="                return TOKEN(TEQ);
-">="                return TOKEN(TGTEQ);
-">"                 return TOKEN(TGT);
-"!"                 return TOKEN(TNOT);
-.                   printf("illegal character: %s\n", yytext); yyterminate();
+[ \t]+              loc.step();
+[\r\n]+             loc.lines(yyleng); loc.step();
+
+"if"                return yy::parser::make_TIF     (loc);
+"else"              return yy::parser::make_TELSE   (loc);
+"endi"              return yy::parser::make_TENDI   (loc);
+"while"             return yy::parser::make_TWHILE  (loc);
+"endw"              return yy::parser::make_TENDW   (loc);
+"fun"               return yy::parser::make_TFUN    (loc);
+"endf"              return yy::parser::make_TENDF   (loc);
+"or"                return yy::parser::make_TOR     (loc);
+"and"               return yy::parser::make_TAND    (loc);
+"return"            return yy::parser::make_TRETURN (loc);
+"input"             return yy::parser::make_TINPUT  (loc);
+"output"            return yy::parser::make_TOUTPUT (loc);
+
+[a-zA-Z]+           return yy::parser::make_TID     (yytext, loc);
+[0-9]*\.?[0-9]+     return yy::parser::make_TNUM    (yytext, loc);
+
+";"                 return yy::parser::make_TSCOL   (loc);
+"("                 return yy::parser::make_TLPAR   (loc);
+")"                 return yy::parser::make_TRPAR   (loc);
+","                 return yy::parser::make_TCOMMA  (loc);
+":="                return yy::parser::make_TASSIGN (loc);
+"+"                 return yy::parser::make_TPLUS   (loc);
+"-"                 return yy::parser::make_TMINUS  (loc);
+"*"                 return yy::parser::make_TTIMES  (loc);
+"/"                 return yy::parser::make_TDIV    (loc);
+"<"                 return yy::parser::make_TLT     (loc);
+"<="                return yy::parser::make_TLTEQ   (loc);
+"=="                return yy::parser::make_TEQ     (loc);
+">="                return yy::parser::make_TGTEQ   (loc);
+">"                 return yy::parser::make_TGT     (loc);
+"!"                 return yy::parser::make_TNOT    (loc);
+
+<<EOF>>             return yy::parser::make_TEOF    (loc);
+.                   { throw yy::parser::syntax_error
+                        (loc, "invalid character: " + std::string(yytext)); }
 %%

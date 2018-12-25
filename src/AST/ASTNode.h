@@ -9,6 +9,7 @@
 
 namespace explain {
 
+using EntryList = std::vector<Entry *>;
 using ExpressionList = std::vector<Expression *>;
 using IdentifierList = std::vector<Identifier *>;
 using StatementList = std::vector<Statement *>;

@@ -4,10 +4,7 @@
 
 namespace explain {
 
-BlockStatement::BlockStatement()
-{
-    ;
-}
+BlockStatement::BlockStatement() = default;
 
 BlockStatement::~BlockStatement() = default;
 

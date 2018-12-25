@@ -2,11 +2,11 @@
 #define EXPLAIN_FUNCTIONDECLARATION_H
 
 #include "../ASTNode.h"
+#include "../Entry.h"
 
 namespace explain {
 
-
-class FunctionDeclaration : public ASTNode
+class FunctionDeclaration : public Entry
 {
     Identifier *ident;
     IdentifierList formalArgs;

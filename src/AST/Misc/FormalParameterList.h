@@ -21,7 +21,7 @@ public:
 
     void accept(Visitor&) final;
 
-    void addParameter(Expression *);
+    void addParameter(Identifier *);
 };
 
 }

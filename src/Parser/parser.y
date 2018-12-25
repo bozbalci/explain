@@ -2,6 +2,7 @@
 %require "3.2"
 
 %defines
+%locations
 
 %define api.token.constructor
 %define api.value.type variant
@@ -11,6 +12,8 @@
 
 %code requires {
 
+#include "../src/AST/ASTRoot.h"
+#include "../src/AST/Entry.h"
 #include "../src/AST/Conditional/Conditional.h"
 #include "../src/AST/Conditional/ConditionalBinaryOp.h"
 #include "../src/AST/Conditional/ConditionalCompOp.h"
@@ -20,7 +23,10 @@
 #include "../src/AST/Expression/ExpressionFunctionCall.h"
 #include "../src/AST/Expression/ExpressionIdentifier.h"
 #include "../src/AST/Expression/ExpressionLiteral.h"
+#include "../src/AST/Function/FunctionDeclaration.h"
 #include "../src/AST/Identifier/Identifier.h"
+#include "../src/AST/Misc/ActualParameterList.h"
+#include "../src/AST/Misc/FormalParameterList.h"
 #include "../src/AST/Misc/Operator.h"
 #include "../src/AST/Statement/AssignmentStatement.h"
 #include "../src/AST/Statement/IOStatement.h"
@@ -41,17 +47,22 @@ int yyerror(const char *s);
 %}
 
 %token <std::string> TID TNUM
-%token <token> TIF TELSE TENDI TWHILE TENDW TFUN TENDF
+%token <token> TIF TELSE TENDI TWHILE TENDW TFUN TENDF TEOF
 %token <token> TOR TAND TRETURN TINPUT TOUTPUT
 %token <token> TSCOL TLPAR TRPAR TCOMMA TASSIGN TPLUS TMINUS TTIMES TDIV
 %token <token> TLT TLTEQ TEQ TGTEQ TGT TNOT
 
+%type <explain::ASTRoot *> file_input entries
+%type <explain::Entry *> entry
+%type <explain::FunctionDeclaration *> func_decl;
 %type <explain::Identifier *> ident
 %type <explain::BlockStatement *> block_stmt
-%type <explain::Statement *> assignment_stmt if_stmt while_stmt return_stmt io_stmt
-%type <explain::Expression *> expr expr_binop
+%type <explain::Statement *> stmt assignment_stmt if_stmt while_stmt return_stmt io_stmt
+%type <explain::Expression *> expr expr_binop func_call
 %type <explain::Conditional *> cond cond_unop cond_binop cond_compop
 %type <explain::Operator> comp_op
+%type <explain::FormalParameterList *> func_decl_args decl_arg_list
+%type <explain::ActualParameterList *> func_call_args call_arg_list
 
 /* Operator precedence for mathematical operators */
 %left TPLUS TMINUS
@@ -67,13 +78,14 @@ int yyerror(const char *s);
 %%
 
 file_input
-    : entries
+    : entries TEOF
     ;
 
 
 entries
-    : entry
-    | entries entry
+    : entry             { $$ = new explain::ASTRoot();
+                          $$->addEntry($1); }
+    | entries entry     { $1->addEntry($2); }
     ;
 
 
@@ -94,9 +106,9 @@ stmt
 
 block_stmt
     : stmt TSCOL        { $$ = new explain::BlockStatement();
-                          $$->createStatement($<stmt>1); }
+                          $$->createStatement($1); }
     | block_stmt stmt TSCOL
-                        { $1->createStatement($<stmt>2); }
+                        { $1->createStatement($2); }
     ;
 
 

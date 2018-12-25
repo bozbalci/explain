@@ -2,10 +2,11 @@
 #define EXPLAIN_STATEMENT_H
 
 #include "../ASTNode.h"
+#include "../Entry.h"
 
 namespace explain {
 
-class Statement : public ASTNode {
+class Statement : public Entry {
 public:
     void accept(Visitor&) override;
 };

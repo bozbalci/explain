@@ -22,7 +22,7 @@ FormalParameterList::accept(Visitor& visitor) {
 }
 
 void
-FormalParameterList::addParameter(Expression *param) {
+FormalParameterList::addParameter(Identifier *param) {
     formalParams.push_back(param);
 }
 

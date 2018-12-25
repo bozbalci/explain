@@ -9,7 +9,7 @@ class Identifier : public ASTNode
 {
     std::string name;
 public:
-    Identifier(std::string);
+    explicit Identifier(std::string);
     ~Identifier() final;
 
     llvm::Value *generateCode() final;
