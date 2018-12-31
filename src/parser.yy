@@ -63,31 +63,31 @@
 %token <std::string> IDENTIFIER "identifier"
 %token <double> NUMBER "number"
 
-%type <Root *> file_input entries
-%type <Entry *> entry
+%type <explain::AST::Root *> file_input entries
+%type <explain::AST::Entry *> entry
 
-%type <Stmt *> stmt
-%type <FuncDecl *> func_decl
+%type <explain::AST::Stmt *> stmt
+%type <explain::AST::FuncDecl *> func_decl
 
-%type <BlockStmt *> block_stmt
+%type <explain::AST::BlockStmt *> block_stmt
 
-%type <AssignmentStmt *> assignment_stmt
-%type <IfStmt *> if_stmt
-%type <WhileStmt *> while_stmt
-%type <ReturnStmt *> return_stmt
-%type <IOStmt *> io_stmt
+%type <explain::AST::AssignmentStmt *> assignment_stmt
+%type <explain::AST::IfStmt *> if_stmt
+%type <explain::AST::WhileStmt *> while_stmt
+%type <explain::AST::ReturnStmt *> return_stmt
+%type <explain::AST::IOStmt *> io_stmt
 
-%type <Expr *> expr
-%type <ExprFuncCall *> func_call
-%type <ExprBinOp *> expr_binop
+%type <explain::AST::Expr *> expr
+%type <explain::AST::ExprFuncCall *> func_call
+%type <explain::AST::ExprBinOp *> expr_binop
 
-%type <Cond *> cond
-%type <CondUnOp *> cond_unop
-%type <CondBinOp *> cond_binop
-%type <CondCompOp *> cond_compop
+%type <explain::AST::Cond *> cond
+%type <explain::AST::CondUnOp *> cond_unop
+%type <explain::AST::CondBinOp *> cond_binop
+%type <explain::AST::CondCompOp *> cond_compop
 
-%type <FuncDeclArgs *> func_decl_args decl_arg_list;
-%type <FuncCallArgs *> func_call_args call_arg_list;
+%type <explain::AST::FuncDeclArgs *> func_decl_args decl_arg_list;
+%type <explain::AST::FuncCallArgs *> func_call_args call_arg_list;
 
 %type <std::string> ident
 %type <double> number
@@ -112,7 +112,7 @@ file_input
 
 entries
     : entry
-        { $$ = new Root();
+        { $$ = new explain::AST::Root();
           $$->entries.push_back($1); }
     | entries entry
         { $$ = $1; $$->entries.push_back($2); }
@@ -143,7 +143,7 @@ stmt
 
 block_stmt
     : stmt ";"
-        { $$ = new BlockStmt();
+        { $$ = new explain::AST::BlockStmt();
           $$->stmts.push_back($1); }
     | block_stmt stmt ";"
         { $$ = $1; $$->stmts.push_back($2); }
@@ -166,35 +166,35 @@ number
 
 assignment_stmt
     : ident ":=" expr
-        { $$ = new AssignmentStmt($1, $3); }
+        { $$ = new explain::AST::AssignmentStmt($1, $3); }
     ;
 
 
 if_stmt
     : "if" cond block_stmt "endi"
-        { $$ = new IfStmt($2, $3, nullptr); }
+        { $$ = new explain::AST::IfStmt($2, $3, nullptr); }
     | "if" cond block_stmt "else" block_stmt "endi"
-        { $$ = new IfStmt($2, $3, $5); }
+        { $$ = new explain::AST::IfStmt($2, $3, $5); }
     ;
 
 
 while_stmt
     : "while" cond block_stmt "endw"
-        { $$ = new WhileStmt($2, $3); }
+        { $$ = new explain::AST::WhileStmt($2, $3); }
     ;
 
 
 return_stmt
     : "return" expr
-        { $$ = new ReturnStmt($2); }
+        { $$ = new explain::AST::ReturnStmt($2); }
     ;
 
 
 io_stmt
     : "input" ident
-        { $$ = new IOStmt(Operator::INPUT, $2); }
+        { $$ = new explain::AST::IOStmt(explain::AST::Operator::INPUT, $2); }
     | "output" ident
-        { $$ = new IOStmt(Operator::OUTPUT, $2); }
+        { $$ = new explain::AST::IOStmt(explain::AST::Operator::OUTPUT, $2); }
     ;
 
 
@@ -202,9 +202,9 @@ expr
     : func_call
         { $$ = $1; }
     | ident
-        { $$ = new ExprIdent($1); }
+        { $$ = new explain::AST::ExprIdent($1); }
     | number
-        { $$ = new ExprNumber($1); }
+        { $$ = new explain::AST::ExprNumber($1); }
     | "(" expr ")"
         { $$ = $2; }
     | expr_binop
@@ -214,13 +214,13 @@ expr
 
 expr_binop
     : expr "+" expr
-        { $$ = new ExprBinOp(Operator::PLUS, $1, $3); }
+        { $$ = new explain::AST::ExprBinOp(explain::AST::Operator::PLUS, $1, $3); }
     | expr "-" expr
-        { $$ = new ExprBinOp(Operator::MINUS, $1, $3); }
+        { $$ = new explain::AST::ExprBinOp(explain::AST::Operator::MINUS, $1, $3); }
     | expr "*" expr
-        { $$ = new ExprBinOp(Operator::TIMES, $1, $3); }
+        { $$ = new explain::AST::ExprBinOp(explain::AST::Operator::TIMES, $1, $3); }
     | expr "/" expr
-        { $$ = new ExprBinOp(Operator::DIV, $1, $3); }
+        { $$ = new explain::AST::ExprBinOp(explain::AST::Operator::DIV, $1, $3); }
     ;
 
 
@@ -238,46 +238,46 @@ cond
 
 cond_unop
     : "!" cond
-        { $$ = new CondUnOp(Operator::NOT, $2); }
+        { $$ = new explain::AST::CondUnOp(explain::AST::Operator::NOT, $2); }
     ;
 
 
 cond_binop
     : cond "and" cond
-        { $$ = new CondBinOp(Operator::AND, $1, $3); }
+        { $$ = new explain::AST::CondBinOp(explain::AST::Operator::AND, $1, $3); }
     | cond "or" cond
-        { $$ = new CondBinOp(Operator::OR, $1, $3); }
+        { $$ = new explain::AST::CondBinOp(explain::AST::Operator::OR, $1, $3); }
     ;
 
 
 cond_compop
     : expr "<" expr
-        { $$ = new CondCompOp(Operator::LT, $1, $3); }
+        { $$ = new explain::AST::CondCompOp(explain::AST::Operator::LT, $1, $3); }
     | expr "<=" expr
-        { $$ = new CondCompOp(Operator::LTEQ, $1, $3); }
+        { $$ = new explain::AST::CondCompOp(explain::AST::Operator::LTEQ, $1, $3); }
     | expr "==" expr
-        { $$ = new CondCompOp(Operator::EQ, $1, $3); }
+        { $$ = new explain::AST::CondCompOp(explain::AST::Operator::EQ, $1, $3); }
     | expr ">=" expr
-        { $$ = new CondCompOp(Operator::GTEQ, $1, $3); }
+        { $$ = new explain::AST::CondCompOp(explain::AST::Operator::GTEQ, $1, $3); }
     | expr ">" expr
-        { $$ = new CondCompOp(Operator::GT, $1, $3); }
+        { $$ = new explain::AST::CondCompOp(explain::AST::Operator::GT, $1, $3); }
     ;
 
 func_decl
     : "fun" ident "(" func_decl_args ")" block_stmt "endf"
-        { $$ = new FuncDecl($2, $4, $6); }
+        { $$ = new explain::AST::FuncDecl($2, $4, $6); }
     ;
 
 
 func_call
     : ident "(" func_call_args ")"
-        { $$ = new ExprFuncCall($1, $3); }
+        { $$ = new explain::AST::ExprFuncCall($1, $3); }
     ;
 
 
 func_decl_args
     : %empty /* no argument */
-        { $$ = new FuncDeclArgs(); }
+        { $$ = new explain::AST::FuncDeclArgs(); }
     | decl_arg_list
         { $$ = $1; }
     ;
@@ -285,7 +285,7 @@ func_decl_args
 
 func_call_args
     : %empty /* no argument */
-        { $$ = new FuncCallArgs(); }
+        { $$ = new explain::AST::FuncCallArgs(); }
     | call_arg_list
         { $$ = $1; }
     ;
@@ -293,7 +293,7 @@ func_call_args
 
 decl_arg_list
     : ident
-        { $$ = new FuncDeclArgs();
+        { $$ = new explain::AST::FuncDeclArgs();
           $$->idents.push_back($1); }
     | decl_arg_list "," ident
         { $$ = $1; $$->idents.push_back($3); }
@@ -302,7 +302,7 @@ decl_arg_list
 
 call_arg_list
     : expr
-        { $$ = new FuncCallArgs();
+        { $$ = new explain::AST::FuncCallArgs();
           $$->exprs.push_back($1); }
     | call_arg_list "," expr
         { $$ = $1; $$->exprs.push_back($3); }

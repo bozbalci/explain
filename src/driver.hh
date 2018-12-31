@@ -15,7 +15,7 @@ YY_DECL;
 class driver
 {
 public:
-  Root *root;
+  explain::AST::Root *root;
 
   driver ();
 

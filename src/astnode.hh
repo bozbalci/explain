@@ -5,6 +5,9 @@
 #include <list>
 #include <utility>
 
+namespace explain {
+namespace AST {
+
 class Node;
 class Entry;
 class Root;
@@ -268,5 +271,7 @@ public:
     FuncCallArgs() = default;
     void print(int level) override;
 };
+
+}} // namespace explain::AST
 
 #endif // ASTNODE_HH

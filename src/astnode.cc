@@ -1,5 +1,8 @@
 #include "astnode.hh"
 
+namespace explain {
+namespace AST {
+
 void
 Entry::print(int level)
 {
@@ -290,3 +293,5 @@ FuncCallArgs::print(int level)
         expr->print(level + 1);
     }
 }
+
+}} // namespace explain::AST
