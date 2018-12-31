@@ -1,5 +1,5 @@
-#ifndef ASTNODE_HH
-#define ASTNODE_HH
+#ifndef EXPLAIN_AST_HH
+#define EXPLAIN_AST_HH
 
 #include <iostream>
 #include <list>
@@ -274,4 +274,4 @@ public:
 
 }} // namespace explain::AST
 
-#endif // ASTNODE_HH
+#endif // EXPLAIN_AST_HH
