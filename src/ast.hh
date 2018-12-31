@@ -176,6 +176,7 @@ class Expr : public Node
 {
 public:
     Expr() = default;
+    virtual ~Expr() = default;
     void print(int level) override;
     virtual llvm::Value *codegen() = 0;
 };
@@ -188,6 +189,7 @@ public:
 
     ExprBinOp(Operator op, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs)
         : op(op), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    ~ExprBinOp() override = default;
     void print(int level) override;
     llvm::Value *codegen() override;
 };
@@ -199,6 +201,7 @@ public:
 
     explicit ExprIdent(std::string ident)
         : ident(std::move(ident)) {}
+    ~ExprIdent() override = default;
     void print(int level) override;
     llvm::Value *codegen() override;
 };
@@ -210,6 +213,7 @@ public:
 
     explicit ExprNumber(double number)
         : number(number) {}
+    ~ExprNumber() override = default;
     void print(int level) override;
     llvm::Value *codegen() override;
 };
@@ -222,6 +226,7 @@ public:
 
     ExprFuncCall(std::string ident, std::unique_ptr<FuncCallArgs> args)
         : ident(std::move(ident)), args(std::move(args)) {}
+    ~ExprFuncCall() override = default;
     void print(int level) override;
     llvm::Value *codegen() override;
 };
