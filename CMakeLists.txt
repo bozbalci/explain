@@ -26,14 +26,14 @@ message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION} at: ${LLVM_DIR}")
 
 # Set up sources and headers
 set(SOURCE_COMMON
-        src/astnode.cc
+        src/ast.cc
         src/driver.cc
         src/parser.yy
         src/scanner.ll
         src/main.cc)
 
 set(HEADER_COMMON
-        src/astnode.hh
+        src/ast.hh
         src/driver.hh
         src/location.hh)
 

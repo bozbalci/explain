@@ -144,7 +144,7 @@ make_NUMBER(const std::string &s, const yy::parser::location_type& loc)
 }
 
 void
-driver::scan_begin()
+Driver::scan_begin()
 {
     yy_flex_debug = trace_scanning;
     if (file.empty () || file == "-")
@@ -157,7 +157,7 @@ driver::scan_begin()
 }
 
 void
-driver::scan_end()
+Driver::scan_end()
 {
   fclose(yyin);
 }
