@@ -25,63 +25,22 @@ message(STATUS "Found bison ${BISON_VERSION} at: ${BISON_EXECUTABLE}")
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION} at: ${LLVM_DIR}")
 
 # Set up flex and bison dependency
-flex_target(Scanner src/Parser/tokens.l ${CMAKE_CURRENT_BINARY_DIR}/tokens.cc)
-bison_target(Parser src/Parser/parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cc)
+flex_target(Scanner src/scanner.ll ${CMAKE_CURRENT_BINARY_DIR}/scanner.cc COMPILE_FLAGS "-i")
+bison_target(Parser src/parser.yy ${CMAKE_CURRENT_BINARY_DIR}/parser.cc)
 add_flex_bison_dependency(Scanner Parser)
 
 # Set up sources and headers
 set(SOURCE_COMMON
-        src/AST/Conditional/Conditional.cc
-        src/AST/Conditional/ConditionalBinaryOp.cc
-        src/AST/Conditional/ConditionalCompOp.cc
-        src/AST/Conditional/ConditionalUnaryOp.cc
-        src/AST/Expression/Expression.cc
-        src/AST/Expression/ExpressionBinaryOp.cc
-        src/AST/Expression/ExpressionFunctionCall.cc
-        src/AST/Expression/ExpressionIdentifier.cc
-        src/AST/Expression/ExpressionLiteral.cc
-        src/AST/Expression/ExpressionLiteral.cc
-        src/AST/Function/FunctionDeclaration.cc
-        src/AST/Identifier/Identifier.cc
-        src/AST/Misc/ActualParameterList.cc
-        src/AST/Misc/FormalParameterList.cc
-        src/AST/Statement/AssignmentStatement.cc
-        src/AST/Statement/BlockStatement.cc
-        src/AST/Statement/IOStatement.cc
-        src/AST/Statement/IfStatement.cc
-        src/AST/Statement/ReturnStatement.cc
-        src/AST/Statement/Statement.cc
-        src/AST/Statement/WhileStatement.cc
-        src/Parser/parser.y
-        src/Parser/tokens.l
-        src/Visitor/Visitor.cc
-        src/main.cc
-        src/AST/Entry.cc src/AST/ASTRoot.cc)
+        src/astnode.cc
+        src/driver.cc
+        src/parser.yy
+        src/scanner.ll
+        src/main.cc)
 
 set(HEADER_COMMON
-        src/AST/ASTNode.h
-        src/AST/Conditional/Conditional.h
-        src/AST/Conditional/ConditionalBinaryOp.h
-        src/AST/Conditional/ConditionalCompOp.h
-        src/AST/Conditional/ConditionalUnaryOp.h
-        src/AST/Expression/Expression.h
-        src/AST/Expression/ExpressionBinaryOp.h
-        src/AST/Expression/ExpressionIdentifier.h
-        src/AST/Expression/ExpressionLiteral.h
-        src/AST/Function/FunctionDeclaration.h
-        src/AST/Identifier/Identifier.h
-        src/AST/Misc/ActualParameterList.h
-        src/AST/Misc/FormalParameterList.h
-        src/AST/Misc/Operator.h
-        src/AST/Statement/AssignmentStatement.h
-        src/AST/Statement/BlockStatement.h
-        src/AST/Statement/IOStatement.h
-        src/AST/Statement/IfStatement.h
-        src/AST/Statement/ReturnStatement.h
-        src/AST/Statement/Statement.h
-        src/AST/Statement/WhileStatement.h
-        src/Visitor/Visitor.h
-        src/AST/Entry.h src/AST/ASTRoot.h)
+        src/astnode.hh
+        src/driver.hh
+        src/location.hh)
 
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
