@@ -30,12 +30,13 @@ set(SOURCE_COMMON
         src/driver.cc
         src/parser.yy
         src/scanner.ll
-        src/main.cc)
+        src/main.cc
+        src/codegen.cc)
 
 set(HEADER_COMMON
         src/ast.hh
         src/driver.hh
-        src/location.hh)
+        src/location.hh src/codegen.hh)
 
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})

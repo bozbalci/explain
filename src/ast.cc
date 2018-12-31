@@ -13,7 +13,8 @@ Entry::print(int level)
 void
 Root::print(int level)
 {
-    for (auto e : entries) {
+    for (auto& e : entries)
+    {
         e->print(level);
     }
 }
@@ -28,7 +29,8 @@ Stmt::print(int level)
 void
 BlockStmt::print(int level)
 {
-    for (auto s : stmts) {
+    for (auto &s : stmts)
+    {
         s->print(level);
     }
 }
@@ -39,18 +41,20 @@ FuncDecl::print(int level)
     Node::indent(level);
     std::cout << "Func " << ident << std::endl;
 
-    if (args) {
+    if (args)
+    {
         Node::indent(level + 1);
         std::cout << "Args" << std::endl;
         args->print(level + 2);
     }
 
-    if (body) {
+    if (body)
+    {
         body->print(level + 1);
     }
 
     Node::indent(level);
-    std::cout << "End Func " << std::endl;
+    std::cout << "End Func" << std::endl;
 }
 
 void
@@ -69,17 +73,20 @@ IfStmt::print(int level)
     Node::indent(level);
     std::cout << "If" << std::endl;
 
-    if (cond) {
+    if (cond)
+    {
         cond->print(level + 1);
     }
 
-    if (then) {
+    if (then)
+    {
         Node::indent(level);
         std::cout << "Then" << std::endl;
         then->print(level + 1);
     }
 
-    if (otherwise) {
+    if (otherwise)
+    {
         Node::indent(level);
         std::cout << "Else" << std::endl;
         otherwise->print(level + 1);
@@ -95,11 +102,13 @@ WhileStmt::print(int level)
     Node::indent(level);
     std::cout << "While" << std::endl;
 
-    if (cond) {
+    if (cond)
+    {
         cond->print(level + 1);
     }
 
-    if (loop) {
+    if (loop)
+    {
         Node::indent(level);
         std::cout << "Do" << std::endl;
         loop->print(level + 1);
@@ -114,7 +123,9 @@ ReturnStmt::print(int level)
 {
     Node::indent(level);
     std::cout << "Return" << std::endl;
-    if (expr) {
+
+    if (expr)
+    {
         expr->print(level + 1);
     }
 }
@@ -123,7 +134,9 @@ void
 IOStmt::print(int level)
 {
     Node::indent(level);
-    switch (op) {
+
+    switch (op)
+    {
         case Operator::INPUT:
             std::cout << "Input " << ident << std::endl;
             break;
@@ -147,7 +160,9 @@ void
 ExprBinOp::print(int level)
 {
     Node::indent(level);
-    switch (op) {
+
+    switch (op)
+    {
         case Operator::PLUS:
             std::cout << "+" << std::endl;
             break;
@@ -164,11 +179,13 @@ ExprBinOp::print(int level)
             std::cout << "Malformed ExprBinOp" << std::endl;
     }
 
-    if (lhs) {
+    if (lhs)
+    {
         lhs->print(level + 1);
     }
 
-    if (rhs) {
+    if (rhs)
+    {
         rhs->print(level + 1);
     }
 }
@@ -208,15 +225,19 @@ void
 CondUnOp::print(int level)
 {
     Node::indent(level);
-    switch (op) {
+
+    switch (op)
+    {
         case Operator::NOT:
             std::cout << "!" << std::endl;
-            if (cond) {
-                cond->print(level + 1);
-            }
             break;
         default:
             std::cout << "Malformed CondUnOp" << std::endl;
+    }
+
+    if (cond)
+    {
+        cond->print(level + 1);
     }
 }
 
@@ -224,7 +245,9 @@ void
 CondBinOp::print(int level)
 {
     Node::indent(level);
-    switch (op) {
+
+    switch (op)
+    {
         case Operator::AND:
             std::cout << "and" << std::endl;
             break;
@@ -234,10 +257,14 @@ CondBinOp::print(int level)
         default:
             std::cout << "Malformed CondBinOp" << std::endl;
     }
-    if (lhs) {
+
+    if (lhs)
+    {
         lhs->print(level + 1);
     }
-    if (rhs) {
+
+    if (rhs)
+    {
         rhs->print(level + 1);
     }
 }
@@ -246,7 +273,9 @@ void
 CondCompOp::print(int level)
 {
     Node::indent(level);
-    switch (op) {
+
+    switch (op)
+    {
         case Operator::LTEQ:
             std::cout << "<=" << std::endl;
             break;
@@ -265,10 +294,14 @@ CondCompOp::print(int level)
         default:
             std::cout << "Malformed CondCompOp" << std::endl;
     }
-    if (lhs) {
+
+    if (lhs)
+    {
         lhs->print(level + 1);
     }
-    if (rhs) {
+
+    if (rhs)
+    {
         rhs->print(level + 1);
     }
 }
@@ -276,7 +309,7 @@ CondCompOp::print(int level)
 void
 FuncDeclArgs::print(int level)
 {
-    for (auto ident : idents)
+    for (const auto &ident : idents)
     {
         Node::indent(level);
         std::cout << "Arg " << ident << std::endl;
@@ -286,7 +319,7 @@ FuncDeclArgs::print(int level)
 void
 FuncCallArgs::print(int level)
 {
-    for (auto expr : exprs)
+    for (const auto &expr : exprs)
     {
         Node::indent(level);
         std::cout << "Arg" << std::endl;

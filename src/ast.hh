@@ -3,7 +3,10 @@
 
 #include <iostream>
 #include <list>
+#include <memory>
 #include <utility>
+
+#include <llvm/IR/Value.h>
 
 namespace explain {
 namespace AST {
@@ -33,18 +36,22 @@ class FuncCallArgs;
 
 enum class Operator
 {
+    // IO operators
     INPUT,
     OUTPUT,
 
+    // Arithmetic operators
     PLUS,
     MINUS,
     TIMES,
     DIV,
 
+    // Logical operators
     NOT,
     AND,
     OR,
 
+    // Comparison operators
     LT,
     LTEQ,
     EQ,
@@ -77,7 +84,7 @@ public:
 class Root : public Node
 {
 public:
-    std::list<Entry *> entries;
+    std::list<std::unique_ptr<Entry>> entries;
 
     Root() = default;
     void print(int level) override;
@@ -93,7 +100,7 @@ public:
 class BlockStmt : public Node
 {
 public:
-    std::list<Stmt *> stmts;
+    std::list<std::unique_ptr<Stmt>> stmts;
 
     BlockStmt() = default;
     void print(int level) override;
@@ -103,11 +110,11 @@ class FuncDecl : public Entry
 {
 public:
     std::string ident;
-    FuncDeclArgs *args;
-    BlockStmt *body;
+    std::unique_ptr<FuncDeclArgs> args;
+    std::unique_ptr<BlockStmt> body;
 
-    FuncDecl(std::string ident, FuncDeclArgs *args, BlockStmt *body)
-        : ident(std::move(ident)), args(args), body(body) {}
+    FuncDecl(std::string ident, std::unique_ptr<FuncDeclArgs> args, std::unique_ptr<BlockStmt> body)
+        : ident(std::move(ident)), args(std::move(args)), body(std::move(body)) {}
     void print(int level) override;
 };
 
@@ -115,42 +122,42 @@ class AssignmentStmt : public Stmt
 {
 public:
     std::string ident;
-    Expr *expr;
+    std::unique_ptr<Expr> expr;
 
-    AssignmentStmt(std::string ident, Expr *expr)
-        : ident(std::move(ident)), expr(expr) {}
+    AssignmentStmt(std::string ident, std::unique_ptr<Expr> expr)
+        : ident(std::move(ident)), expr(std::move(expr)) {}
     void print(int level) override;
 };
 
 class IfStmt : public Stmt
 {
 public:
-    Cond *cond;
-    BlockStmt *then, *otherwise;
+    std::unique_ptr<Cond> cond;
+    std::unique_ptr<BlockStmt> then, otherwise;
 
-    IfStmt(Cond *cond, BlockStmt *then, BlockStmt *otherwise)
-        : cond(cond), then(then), otherwise(otherwise) {}
+    IfStmt(std::unique_ptr<Cond> cond, std::unique_ptr<BlockStmt> then, std::unique_ptr<BlockStmt> otherwise)
+        : cond(std::move(cond)), then(std::move(then)), otherwise(std::move(otherwise)) {}
     void print(int level) override;
 };
 
 class WhileStmt : public Stmt
 {
 public:
-    Cond *cond;
-    BlockStmt *loop;
+    std::unique_ptr<Cond> cond;
+    std::unique_ptr<BlockStmt> loop;
 
-    WhileStmt(Cond *cond, BlockStmt *loop)
-        : cond(cond), loop(loop) {}
+    WhileStmt(std::unique_ptr<Cond> cond, std::unique_ptr<BlockStmt> loop)
+        : cond(std::move(cond)), loop(std::move(loop)) {}
     void print(int level) override;
 };
 
 class ReturnStmt : public Stmt
 {
 public:
-    Expr *expr;
+    std::unique_ptr<Expr> expr;
 
-    explicit ReturnStmt(Expr *expr)
-        : expr(expr) {}
+    explicit ReturnStmt(std::unique_ptr<Expr> expr)
+        : expr(std::move(expr)) {}
     void print(int level) override;
 };
 
@@ -170,17 +177,19 @@ class Expr : public Node
 public:
     Expr() = default;
     void print(int level) override;
+    virtual llvm::Value *codegen() = 0;
 };
 
 class ExprBinOp : public Expr
 {
 public:
     Operator op;
-    Expr *lhs, *rhs;
+    std::unique_ptr<Expr> lhs, rhs;
 
-    ExprBinOp(Operator op, Expr *lhs, Expr *rhs)
-        : op(op), lhs(lhs), rhs(rhs) {}
+    ExprBinOp(Operator op, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs)
+        : op(op), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
     void print(int level) override;
+    llvm::Value *codegen() override;
 };
 
 class ExprIdent : public Expr
@@ -191,6 +200,7 @@ public:
     explicit ExprIdent(std::string ident)
         : ident(std::move(ident)) {}
     void print(int level) override;
+    llvm::Value *codegen() override;
 };
 
 class ExprNumber : public Expr
@@ -201,17 +211,19 @@ public:
     explicit ExprNumber(double number)
         : number(number) {}
     void print(int level) override;
+    llvm::Value *codegen() override;
 };
 
 class ExprFuncCall : public Expr
 {
 public:
     std::string ident;
-    FuncCallArgs *args;
+    std::unique_ptr<FuncCallArgs> args;
 
-    ExprFuncCall(std::string ident, FuncCallArgs *args)
-        : ident(std::move(ident)), args(args) {}
+    ExprFuncCall(std::string ident, std::unique_ptr<FuncCallArgs> args)
+        : ident(std::move(ident)), args(std::move(args)) {}
     void print(int level) override;
+    llvm::Value *codegen() override;
 };
 
 class Cond : public Node
@@ -225,10 +237,10 @@ class CondUnOp : public Cond
 {
 public:
     Operator op;
-    Cond *cond;
+    std::unique_ptr<Cond> cond;
 
-    CondUnOp(Operator op, Cond *cond)
-        : op(op), cond(cond) {}
+    CondUnOp(Operator op, std::unique_ptr<Cond> cond)
+        : op(op), cond(std::move(cond)) {}
     void print(int level) override;
 };
 
@@ -236,10 +248,10 @@ class CondBinOp : public Cond
 {
 public:
     Operator op;
-    Cond *lhs, *rhs;
+    std::unique_ptr<Cond> lhs, rhs;
 
-    CondBinOp(Operator op, Cond *lhs, Cond *rhs)
-        : op(op), lhs(lhs), rhs(rhs) {}
+    CondBinOp(Operator op, std::unique_ptr<Cond> lhs, std::unique_ptr<Cond> rhs)
+        : op(op), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
     void print(int level) override;
 };
 
@@ -247,10 +259,10 @@ class CondCompOp : public Cond
 {
 public:
     Operator op;
-    Expr *lhs, *rhs;
+    std::unique_ptr<Expr> lhs, rhs;
 
-    CondCompOp(Operator op, Expr *lhs, Expr *rhs)
-        : op(op), lhs(lhs), rhs(rhs) {}
+    CondCompOp(Operator op, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs)
+        : op(op), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
     void print(int level) override;
 };
 
@@ -266,7 +278,7 @@ public:
 class FuncCallArgs : public Node
 {
 public:
-    std::list<Expr *> exprs;
+    std::list<std::unique_ptr<Expr>> exprs;
 
     FuncCallArgs() = default;
     void print(int level) override;

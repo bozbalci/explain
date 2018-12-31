@@ -1,8 +1,10 @@
 #ifndef EXPLAIN_DRIVER_HH
 #define EXPLAIN_DRIVER_HH
 
-#include <string>
 #include <map>
+#include <memory>
+#include <string>
+#include <utility>
 
 #include "parser.hh"
 #include "ast.hh"
@@ -16,7 +18,7 @@ YY_DECL;
 class Driver
 {
 public:
-    explain::AST::Root *root;
+    std::unique_ptr<explain::AST::Root> root;
     std::string file;
     bool trace_parsing, trace_scanning;
     yy::location location;

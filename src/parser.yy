@@ -9,7 +9,9 @@
 %code requires {
     #include <algorithm>
     #include <cctype>
+    #include <memory>
     #include <string>
+    #include <utility>
 
     #include "../src/ast.hh"
 
@@ -63,36 +65,33 @@
 %token <std::string> IDENTIFIER "identifier"
 %token <double> NUMBER "number"
 
-%type <explain::AST::Root *> file_input entries
-%type <explain::AST::Entry *> entry
+%type <std::unique_ptr<explain::AST::Root>> file_input entries
+%type <std::unique_ptr<explain::AST::Entry>> entry
 
-%type <explain::AST::Stmt *> stmt
-%type <explain::AST::FuncDecl *> func_decl
+%type <std::unique_ptr<explain::AST::Stmt>> stmt
+%type <std::unique_ptr<explain::AST::FuncDecl>> func_decl
+%type <std::unique_ptr<explain::AST::BlockStmt>> block_stmt
 
-%type <explain::AST::BlockStmt *> block_stmt
+%type <std::unique_ptr<explain::AST::AssignmentStmt>> assignment_stmt
+%type <std::unique_ptr<explain::AST::IfStmt>> if_stmt
+%type <std::unique_ptr<explain::AST::WhileStmt>> while_stmt
+%type <std::unique_ptr<explain::AST::ReturnStmt>> return_stmt
+%type <std::unique_ptr<explain::AST::IOStmt>> io_stmt
 
-%type <explain::AST::AssignmentStmt *> assignment_stmt
-%type <explain::AST::IfStmt *> if_stmt
-%type <explain::AST::WhileStmt *> while_stmt
-%type <explain::AST::ReturnStmt *> return_stmt
-%type <explain::AST::IOStmt *> io_stmt
+%type <std::unique_ptr<explain::AST::Expr>> expr
+%type <std::unique_ptr<explain::AST::ExprFuncCall>> func_call
+%type <std::unique_ptr<explain::AST::ExprBinOp>> expr_binop
 
-%type <explain::AST::Expr *> expr
-%type <explain::AST::ExprFuncCall *> func_call
-%type <explain::AST::ExprBinOp *> expr_binop
+%type <std::unique_ptr<explain::AST::Cond>> cond
+%type <std::unique_ptr<explain::AST::CondUnOp>> cond_unop
+%type <std::unique_ptr<explain::AST::CondBinOp>> cond_binop
+%type <std::unique_ptr<explain::AST::CondCompOp>> cond_compop
 
-%type <explain::AST::Cond *> cond
-%type <explain::AST::CondUnOp *> cond_unop
-%type <explain::AST::CondBinOp *> cond_binop
-%type <explain::AST::CondCompOp *> cond_compop
-
-%type <explain::AST::FuncDeclArgs *> func_decl_args decl_arg_list;
-%type <explain::AST::FuncCallArgs *> func_call_args call_arg_list;
+%type <std::unique_ptr<explain::AST::FuncDeclArgs>> func_decl_args decl_arg_list;
+%type <std::unique_ptr<explain::AST::FuncCallArgs>> func_call_args call_arg_list;
 
 %type <std::string> ident
 %type <double> number
-
-%printer { yyo << $$; } <*>;
 
 %left "+" "-"
 %left "*" "/"
@@ -106,47 +105,47 @@
 
 file_input
     : entries
-        { $$ = $1; drv.root = $1; }
+        { $$ = std::move($1); drv.root = std::move($$); }
     ;
 
 
 entries
     : entry
-        { $$ = new explain::AST::Root();
-          $$->entries.push_back($1); }
+        { $$ = std::make_unique<explain::AST::Root>();
+          $$->entries.push_back(std::move($1)); }
     | entries entry
-        { $$ = $1; $$->entries.push_back($2); }
+        { $$ = std::move($1); $$->entries.push_back(std::move($2)); }
     ;
 
 
 entry
     : stmt ";"
-        { $$ = $1; }
+        { $$ = std::move($1); }
     | func_decl ";"
-        { $$ = $1; }
+        { $$ = std::move($1); }
     ;
 
 
 stmt
     : assignment_stmt
-        { $$ = $1; }
+        { $$ = std::move($1); }
     | if_stmt
-        { $$ = $1; }
+        { $$ = std::move($1); }
     | while_stmt
-        { $$ = $1; }
+        { $$ = std::move($1); }
     | return_stmt
-        { $$ = $1; }
+        { $$ = std::move($1); }
     | io_stmt
-        { $$ = $1; }
+        { $$ = std::move($1); }
     ;
 
 
 block_stmt
     : stmt ";"
-        { $$ = new explain::AST::BlockStmt();
-          $$->stmts.push_back($1); }
+        { $$ = std::make_unique<explain::AST::BlockStmt>();
+          $$->stmts.push_back(std::move($1)); }
     | block_stmt stmt ";"
-        { $$ = $1; $$->stmts.push_back($2); }
+        { $$ = std::move($1); $$->stmts.push_back(std::move($2)); }
     ;
 
 
@@ -154,7 +153,7 @@ ident
     : "identifier"
         { std::transform($1.begin(), $1.end(), $1.begin(),
                          [](unsigned char c) { return std::tolower(c); });
-          $$ = $1; }
+          $$ = std::move($1); }
     ;
 
 
@@ -166,146 +165,146 @@ number
 
 assignment_stmt
     : ident ":=" expr
-        { $$ = new explain::AST::AssignmentStmt($1, $3); }
+        { $$ = std::make_unique<explain::AST::AssignmentStmt>(std::move($1), std::move($3)); }
     ;
 
 
 if_stmt
     : "if" cond block_stmt "endi"
-        { $$ = new explain::AST::IfStmt($2, $3, nullptr); }
+        { $$ = std::make_unique<explain::AST::IfStmt>(std::move($2), std::move($3), nullptr); }
     | "if" cond block_stmt "else" block_stmt "endi"
-        { $$ = new explain::AST::IfStmt($2, $3, $5); }
+        { $$ = std::make_unique<explain::AST::IfStmt>(std::move($2), std::move($3), std::move($5)); }
     ;
 
 
 while_stmt
     : "while" cond block_stmt "endw"
-        { $$ = new explain::AST::WhileStmt($2, $3); }
+        { $$ = std::make_unique<explain::AST::WhileStmt>(std::move($2), std::move($3)); }
     ;
 
 
 return_stmt
     : "return" expr
-        { $$ = new explain::AST::ReturnStmt($2); }
+        { $$ = std::make_unique<explain::AST::ReturnStmt>(std::move($2)); }
     ;
 
 
 io_stmt
     : "input" ident
-        { $$ = new explain::AST::IOStmt(explain::AST::Operator::INPUT, $2); }
+        { $$ = std::make_unique<explain::AST::IOStmt>(explain::AST::Operator::INPUT, std::move($2)); }
     | "output" ident
-        { $$ = new explain::AST::IOStmt(explain::AST::Operator::OUTPUT, $2); }
+        { $$ = std::make_unique<explain::AST::IOStmt>(explain::AST::Operator::OUTPUT, std::move($2)); }
     ;
 
 
 expr
     : func_call
-        { $$ = $1; }
+        { $$ = std::move($1); }
     | ident
-        { $$ = new explain::AST::ExprIdent($1); }
+        { $$ = std::make_unique<explain::AST::ExprIdent>(std::move($1)); }
     | number
-        { $$ = new explain::AST::ExprNumber($1); }
+        { $$ = std::make_unique<explain::AST::ExprNumber>($1); }
     | "(" expr ")"
-        { $$ = $2; }
+        { $$ = std::move($2); }
     | expr_binop
-        { $$ = $1; }
+        { $$ = std::move($1); }
     ;
 
 
 expr_binop
     : expr "+" expr
-        { $$ = new explain::AST::ExprBinOp(explain::AST::Operator::PLUS, $1, $3); }
+        { $$ = std::make_unique<explain::AST::ExprBinOp>(explain::AST::Operator::PLUS, std::move($1), std::move($3)); }
     | expr "-" expr
-        { $$ = new explain::AST::ExprBinOp(explain::AST::Operator::MINUS, $1, $3); }
+        { $$ = std::make_unique<explain::AST::ExprBinOp>(explain::AST::Operator::MINUS, std::move($1), std::move($3)); }
     | expr "*" expr
-        { $$ = new explain::AST::ExprBinOp(explain::AST::Operator::TIMES, $1, $3); }
+        { $$ = std::make_unique<explain::AST::ExprBinOp>(explain::AST::Operator::TIMES, std::move($1), std::move($3)); }
     | expr "/" expr
-        { $$ = new explain::AST::ExprBinOp(explain::AST::Operator::DIV, $1, $3); }
+        { $$ = std::make_unique<explain::AST::ExprBinOp>(explain::AST::Operator::DIV, std::move($1), std::move($3)); }
     ;
 
 
 cond
     : "(" cond ")"
-        { $$ = $2; }
+        { $$ = std::move($2); }
     | cond_unop
-        { $$ = $1; }
+        { $$ = std::move($1); }
     | cond_binop
-        { $$ = $1; }
+        { $$ = std::move($1); }
     | cond_compop
-        { $$ = $1; }
+        { $$ = std::move($1); }
     ;
 
 
 cond_unop
     : "!" cond
-        { $$ = new explain::AST::CondUnOp(explain::AST::Operator::NOT, $2); }
+        { $$ = std::make_unique<explain::AST::CondUnOp>(explain::AST::Operator::NOT, std::move($2)); }
     ;
 
 
 cond_binop
     : cond "and" cond
-        { $$ = new explain::AST::CondBinOp(explain::AST::Operator::AND, $1, $3); }
+        { $$ = std::make_unique<explain::AST::CondBinOp>(explain::AST::Operator::AND, std::move($1), std::move($3)); }
     | cond "or" cond
-        { $$ = new explain::AST::CondBinOp(explain::AST::Operator::OR, $1, $3); }
+        { $$ = std::make_unique<explain::AST::CondBinOp>(explain::AST::Operator::OR, std::move($1), std::move($3)); }
     ;
 
 
 cond_compop
     : expr "<" expr
-        { $$ = new explain::AST::CondCompOp(explain::AST::Operator::LT, $1, $3); }
+        { $$ = std::make_unique<explain::AST::CondCompOp>(explain::AST::Operator::LT, std::move($1), std::move($3)); }
     | expr "<=" expr
-        { $$ = new explain::AST::CondCompOp(explain::AST::Operator::LTEQ, $1, $3); }
+        { $$ = std::make_unique<explain::AST::CondCompOp>(explain::AST::Operator::LTEQ, std::move($1), std::move($3)); }
     | expr "==" expr
-        { $$ = new explain::AST::CondCompOp(explain::AST::Operator::EQ, $1, $3); }
+        { $$ = std::make_unique<explain::AST::CondCompOp>(explain::AST::Operator::EQ, std::move($1), std::move($3)); }
     | expr ">=" expr
-        { $$ = new explain::AST::CondCompOp(explain::AST::Operator::GTEQ, $1, $3); }
+        { $$ = std::make_unique<explain::AST::CondCompOp>(explain::AST::Operator::GTEQ, std::move($1), std::move($3)); }
     | expr ">" expr
-        { $$ = new explain::AST::CondCompOp(explain::AST::Operator::GT, $1, $3); }
+        { $$ = std::make_unique<explain::AST::CondCompOp>(explain::AST::Operator::GT, std::move($1), std::move($3)); }
     ;
 
 func_decl
     : "fun" ident "(" func_decl_args ")" block_stmt "endf"
-        { $$ = new explain::AST::FuncDecl($2, $4, $6); }
+        { $$ = std::make_unique<explain::AST::FuncDecl>(std::move($2), std::move($4), std::move($6)); }
     ;
 
 
 func_call
     : ident "(" func_call_args ")"
-        { $$ = new explain::AST::ExprFuncCall($1, $3); }
+        { $$ = std::make_unique<explain::AST::ExprFuncCall>(std::move($1), std::move($3)); }
     ;
 
 
 func_decl_args
     : %empty /* no argument */
-        { $$ = new explain::AST::FuncDeclArgs(); }
+        { $$ = std::make_unique<explain::AST::FuncDeclArgs>(); }
     | decl_arg_list
-        { $$ = $1; }
+        { $$ = std::move($1); }
     ;
 
 
 func_call_args
     : %empty /* no argument */
-        { $$ = new explain::AST::FuncCallArgs(); }
+        { $$ = std::make_unique<explain::AST::FuncCallArgs>(); }
     | call_arg_list
-        { $$ = $1; }
+        { $$ = std::move($1); }
     ;
 
 
 decl_arg_list
     : ident
-        { $$ = new explain::AST::FuncDeclArgs();
-          $$->idents.push_back($1); }
+        { $$ = std::make_unique<explain::AST::FuncDeclArgs>();
+          $$->idents.push_back(std::move($1)); }
     | decl_arg_list "," ident
-        { $$ = $1; $$->idents.push_back($3); }
+        { $$ = std::move($1); $$->idents.push_back(std::move($3)); }
     ;
 
 
 call_arg_list
     : expr
-        { $$ = new explain::AST::FuncCallArgs();
-          $$->exprs.push_back($1); }
+        { $$ = std::make_unique<explain::AST::FuncCallArgs>();
+          $$->exprs.push_back(std::move($1)); }
     | call_arg_list "," expr
-        { $$ = $1; $$->exprs.push_back($3); }
+        { $$ = std::move($1); $$->exprs.push_back(std::move($3)); }
     ;
 %%
 
