@@ -60,7 +60,7 @@ public:
     }
 
     static void indent(int level) {
-        std::cout << std::string(level * 2, ' ');
+        std::cout << std::string(static_cast<unsigned long>(level * 2), ' ');
     }
 };
 
@@ -104,7 +104,7 @@ public:
     BlockStmt *body;
 
     FuncDecl(std::string ident, FuncDeclArgs *args, BlockStmt *body)
-        : ident(ident), args(args), body(body) {}
+        : ident(std::move(ident)), args(args), body(body) {}
     void print(int level) override;
 };
 
@@ -115,7 +115,7 @@ public:
     Expr *expr;
 
     AssignmentStmt(std::string ident, Expr *expr)
-        : ident(ident), expr(expr) {}
+        : ident(std::move(ident)), expr(expr) {}
     void print(int level) override;
 };
 
@@ -146,7 +146,7 @@ class ReturnStmt : public Stmt
 public:
     Expr *expr;
 
-    ReturnStmt(Expr *expr)
+    explicit ReturnStmt(Expr *expr)
         : expr(expr) {}
     void print(int level) override;
 };
@@ -158,7 +158,7 @@ public:
     std::string ident;
 
     IOStmt(Operator op, std::string ident)
-        : op(op), ident(ident) {}
+        : op(op), ident(std::move(ident)) {}
     void print(int level) override;
 };
 
@@ -185,8 +185,8 @@ class ExprIdent : public Expr
 public:
     std::string ident;
 
-    ExprIdent(std::string ident)
-        : ident(ident) {}
+    explicit ExprIdent(std::string ident)
+        : ident(std::move(ident)) {}
     void print(int level) override;
 };
 
@@ -195,7 +195,7 @@ class ExprNumber : public Expr
 public:
     double number;
 
-    ExprNumber(double number)
+    explicit ExprNumber(double number)
         : number(number) {}
     void print(int level) override;
 };
@@ -207,7 +207,7 @@ public:
     FuncCallArgs *args;
 
     ExprFuncCall(std::string ident, FuncCallArgs *args)
-        : ident(ident), args(args) {}
+        : ident(std::move(ident)), args(args) {}
     void print(int level) override;
 };
 
