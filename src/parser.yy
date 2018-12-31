@@ -11,7 +11,7 @@
     #include <cctype>
     #include <string>
 
-    #include "astnode.hh"
+    #include "../src/astnode.hh"
 
     class driver;
 }
@@ -25,7 +25,7 @@
 %define parse.error verbose
 
 %code {
-    #include "driver.hh"
+    #include "../src/driver.hh"
 }
 
 %define api.token.prefix {TOK_}

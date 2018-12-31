@@ -24,11 +24,6 @@ message(STATUS "Found flex ${FLEX_VERSION} at: ${FLEX_EXECUTABLE}")
 message(STATUS "Found bison ${BISON_VERSION} at: ${BISON_EXECUTABLE}")
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION} at: ${LLVM_DIR}")
 
-# Set up flex and bison dependency
-flex_target(Scanner src/scanner.ll ${CMAKE_CURRENT_BINARY_DIR}/scanner.cc COMPILE_FLAGS "-i")
-bison_target(Parser src/parser.yy ${CMAKE_CURRENT_BINARY_DIR}/parser.cc)
-add_flex_bison_dependency(Scanner Parser)
-
 # Set up sources and headers
 set(SOURCE_COMMON
         src/astnode.cc
@@ -51,6 +46,11 @@ llvm_map_components_to_libnames(LLVM_LIBS core)
 set(CMAKE_CXX_STANDARD 14)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+# Set up flex and bison dependency
+flex_target(Scanner src/scanner.ll ${CMAKE_CURRENT_BINARY_DIR}/scanner.cc COMPILE_FLAGS "-i")
+bison_target(Parser src/parser.yy ${CMAKE_CURRENT_BINARY_DIR}/parser.cc)
+add_flex_bison_dependency(Scanner Parser)
 
 add_executable(explain ${SOURCE_COMMON} ${HEADER_COMMON}
         ${FLEX_Scanner_OUTPUTS}

@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
-#include "driver.hh"
+#include "../src/driver.hh"
 #include "parser.hh"
 %}
 
