@@ -124,6 +124,7 @@ public:
         : ident(std::move(ident)), args(std::move(args)), body(std::move(body)) {}
     ~FuncDecl() override = default;
     void print(int level) override;
+    llvm::Function *codegen(CodeGen::Context& ctx);
     bool validAtTopLevel() override;
 };
 

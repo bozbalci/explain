@@ -14,7 +14,15 @@ namespace CodeGen {
 void
 Context::codegen(std::unique_ptr<AST::Root> root)
 {
-    // TODO implement this
+    // Generate code for every function
+
+    for (auto& f : root->funcDecls)
+    {
+        f->codegen(*this);
+    }
+
+    // Create main function and generate code for main
+    // TODO Implement me!
 }
 
 llvm::Value *
@@ -24,6 +32,12 @@ Context::LogErrorV(std::string str) {
 }
 
 } // end namespace CodeGen
+
+llvm::Function *
+AST::FuncDecl::codegen(CodeGen::Context &ctx)
+{
+    return nullptr;
+}
 
 llvm::Value *
 AST::ExprBinOp::codegen(CodeGen::Context& ctx)
