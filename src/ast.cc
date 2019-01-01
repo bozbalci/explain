@@ -13,9 +13,17 @@ Entry::print(int level)
 void
 Root::print(int level)
 {
-    for (auto& e : entries)
+    for (auto& e : funcDecls)
     {
         e->print(level);
+    }
+
+    Node::indent(level);
+    std::cout << "Main" << std::endl;
+
+    for (auto& s : topLevelStmts)
+    {
+        s->print(level + 1);
     }
 }
 
@@ -24,6 +32,12 @@ Stmt::print(int level)
 {
     Node::indent(level);
     std::cout << "Stmt" << std::endl;
+}
+
+bool
+Stmt::validAtTopLevel()
+{
+    return false;
 }
 
 void
@@ -55,6 +69,12 @@ FuncDecl::print(int level)
 
     Node::indent(level);
     std::cout << "End Func" << std::endl;
+}
+
+bool
+FuncDecl::validAtTopLevel()
+{
+    return true;
 }
 
 void

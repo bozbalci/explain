@@ -80,13 +80,16 @@ class Entry : public Node
 {
 public:
     Entry() = default;
+    virtual ~Entry() = default;
     void print(int level) override;
+    virtual bool validAtTopLevel() = 0;
 };
 
 class Root : public Node
 {
 public:
-    std::list<std::unique_ptr<Entry>> entries;
+    std::list<std::unique_ptr<FuncDecl>> funcDecls;
+    std::list<std::unique_ptr<Stmt>> topLevelStmts;
 
     Root() = default;
     void print(int level) override;
@@ -96,7 +99,9 @@ class Stmt : public Entry
 {
 public:
     Stmt() = default;
+    ~Stmt() override = default;
     void print(int level) override;
+    bool validAtTopLevel() override;
 };
 
 class BlockStmt : public Node
@@ -117,7 +122,9 @@ public:
 
     FuncDecl(std::string ident, std::unique_ptr<FuncDeclArgs> args, std::unique_ptr<BlockStmt> body)
         : ident(std::move(ident)), args(std::move(args)), body(std::move(body)) {}
+    ~FuncDecl() override = default;
     void print(int level) override;
+    bool validAtTopLevel() override;
 };
 
 class AssignmentStmt : public Stmt

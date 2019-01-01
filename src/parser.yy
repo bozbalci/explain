@@ -14,6 +14,7 @@
     #include <utility>
 
     #include "../src/ast.hh"
+    #include "../src/util.hh"
 
     class Driver;
 }
@@ -112,9 +113,18 @@ file_input
 entries
     : entry
         { $$ = std::make_unique<explain::AST::Root>();
-          $$->entries.push_back(std::move($1)); }
+          if ($1->validAtTopLevel())
+              $$->funcDecls.push_back(downcast<explain::AST::FuncDecl, explain::AST::Entry>(std::move($1)));
+          else
+              $$->topLevelStmts.push_back(downcast<explain::AST::Stmt, explain::AST::Entry>(std::move($1)));
+        }
     | entries entry
-        { $$ = std::move($1); $$->entries.push_back(std::move($2)); }
+        { $$ = std::move($1);
+          if ($2->validAtTopLevel())
+              $$->funcDecls.push_back(downcast<explain::AST::FuncDecl, explain::AST::Entry>(std::move($2)));
+          else
+              $$->topLevelStmts.push_back(downcast<explain::AST::Stmt, explain::AST::Entry>(std::move($2)));
+        }
     ;
 
 
