@@ -8,6 +8,8 @@
 
 #include <llvm/IR/Value.h>
 
+#include "codegen.hh"
+
 namespace explain {
 namespace AST {
 
@@ -178,7 +180,7 @@ public:
     Expr() = default;
     virtual ~Expr() = default;
     void print(int level) override;
-    virtual llvm::Value *codegen() = 0;
+    virtual llvm::Value *codegen(CodeGen::Context& ctx) = 0;
 };
 
 class ExprBinOp : public Expr
@@ -191,7 +193,7 @@ public:
         : op(op), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
     ~ExprBinOp() override = default;
     void print(int level) override;
-    llvm::Value *codegen() override;
+    llvm::Value *codegen(CodeGen::Context& ctx) override;
 };
 
 class ExprIdent : public Expr
@@ -203,7 +205,7 @@ public:
         : ident(std::move(ident)) {}
     ~ExprIdent() override = default;
     void print(int level) override;
-    llvm::Value *codegen() override;
+    llvm::Value *codegen(CodeGen::Context& ctx) override;
 };
 
 class ExprNumber : public Expr
@@ -215,7 +217,7 @@ public:
         : number(number) {}
     ~ExprNumber() override = default;
     void print(int level) override;
-    llvm::Value *codegen() override;
+    llvm::Value *codegen(CodeGen::Context& ctx) override;
 };
 
 class ExprFuncCall : public Expr
@@ -228,14 +230,16 @@ public:
         : ident(std::move(ident)), args(std::move(args)) {}
     ~ExprFuncCall() override = default;
     void print(int level) override;
-    llvm::Value *codegen() override;
+    llvm::Value *codegen(CodeGen::Context& ctx) override;
 };
 
 class Cond : public Node
 {
 public:
     Cond() = default;
+    virtual ~Cond() = default;
     void print(int level) override;
+    virtual llvm::Value *codegen(CodeGen::Context& ctx) = 0;
 };
 
 class CondUnOp : public Cond
@@ -246,7 +250,9 @@ public:
 
     CondUnOp(Operator op, std::unique_ptr<Cond> cond)
         : op(op), cond(std::move(cond)) {}
+    ~CondUnOp() override = default;
     void print(int level) override;
+    llvm::Value *codegen(CodeGen::Context& ctx) override;
 };
 
 class CondBinOp : public Cond
@@ -257,7 +263,9 @@ public:
 
     CondBinOp(Operator op, std::unique_ptr<Cond> lhs, std::unique_ptr<Cond> rhs)
         : op(op), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    ~CondBinOp() override = default;
     void print(int level) override;
+    llvm::Value *codegen(CodeGen::Context& ctx) override;
 };
 
 class CondCompOp : public Cond
@@ -268,7 +276,9 @@ public:
 
     CondCompOp(Operator op, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs)
         : op(op), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    ~CondCompOp() override = default;
     void print(int level) override;
+    llvm::Value *codegen(CodeGen::Context& ctx) override;
 };
 
 class FuncDeclArgs : public Node
