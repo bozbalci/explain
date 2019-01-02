@@ -3,7 +3,8 @@
 #include "driver.hh"
 
 int
-main(int argc, char *argv[]) {
+main(int argc, char *argv[])
+{
     int res = 0;
     Driver drv;
 

@@ -47,7 +47,7 @@ public:
     llvm::LLVMContext TheContext;
     llvm::IRBuilder<> Builder;
     std::unique_ptr<llvm::Module> TheModule;
-    std::map<std::string, llvm::Value *> NamedValues;
+    std::map<std::string, llvm::AllocaInst *> LocalVars;
 
     Context()
         : Builder(llvm::IRBuilder<>(TheContext)) {}

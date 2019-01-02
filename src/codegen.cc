@@ -67,7 +67,7 @@ llvm::Value *
 AST::ExprIdent::codegen(CodeGen::Context& ctx)
 {
     // TODO We need to solve this!
-    llvm::Value *V = ctx.NamedValues[ident];
+    llvm::Value *V = ctx.LocalVars[ident];
 
     if (!V)
         ctx.LogErrorV("unknown variable referenced");
