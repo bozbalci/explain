@@ -1,6 +1,7 @@
 #include "ast.hh"
 
 namespace explain {
+
 namespace AST {
 
 void
@@ -347,4 +348,5 @@ FuncCallArgs::print(int level)
     }
 }
 
-}} // namespace explain::AST
+} // end namespace AST
+} // end namespace explain

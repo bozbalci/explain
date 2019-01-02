@@ -30,4 +30,4 @@ public:
     void scan_end();
 };
 
-#endif // EXPLAIN_DRIVER_HH
+#endif //EXPLAIN_DRIVER_HH

@@ -11,6 +11,7 @@
 #include "codegen.hh"
 
 namespace explain {
+
 namespace AST {
 
 class Node;
@@ -307,6 +308,7 @@ public:
     void print(int level) override;
 };
 
-}} // namespace explain::AST
+} // end namespace AST
+} // end namespace explain
 
-#endif // EXPLAIN_AST_HH
+#endif //EXPLAIN_AST_HH
