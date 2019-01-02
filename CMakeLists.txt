@@ -36,7 +36,6 @@ set(SOURCE_COMMON
 set(HEADER_COMMON
         src/ast.hh
         src/driver.hh
-        src/location.hh
         src/codegen.hh
         src/util.hh)
 
