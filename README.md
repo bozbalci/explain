@@ -14,10 +14,20 @@ It features:
 The project was built using the following tooling, earlier versions are not tested:
 
 * CMake >= 3.13
-* C++ compiler with C++17 core language support (gcc >= 7.1 or Clang >= 5.0)
+* C++ compiler with C++14 core language support (gcc >= 5.1 or Clang >= 3.5)
 * flex >= 2.5
 * bison >= 3.2
 * LLVM >= 7.0.0
+
+## Build
+
+    mkdir build
+    cd build
+    cmake ..
+    make
+
+On macOS, the CMake script will issue a warning about the installed Bison version. Make sure that Bison 3.2 (or greater)
+is used when building this project.
 
 ## Usage
 
