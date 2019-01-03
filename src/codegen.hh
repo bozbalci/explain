@@ -7,6 +7,7 @@
 
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/LegacyPassManager.h>
 
 #include "ast.hh"
 
@@ -47,14 +48,19 @@ public:
     llvm::LLVMContext TheContext;
     llvm::IRBuilder<> Builder;
     std::unique_ptr<llvm::Module> TheModule;
+    std::unique_ptr<llvm::legacy::FunctionPassManager> TheFPM;
     std::map<std::string, llvm::AllocaInst *> LocalVars;
+
+    std::string ScopeName;
 
     Context()
         : Builder(llvm::IRBuilder<>(TheContext)) {}
 
-
+    void initialize();
     void codegen(std::unique_ptr<AST::Root> root);
 
+    llvm::Function *GetCurrentFunction();
+    llvm::AllocaInst *EmitEntryBlockAlloca(llvm::Function *TheFunction, std::string VarName);
     llvm::Value *LogErrorV(std::string str);
 };
 

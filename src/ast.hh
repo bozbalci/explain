@@ -2,7 +2,7 @@
 #define EXPLAIN_AST_HH
 
 #include <iostream>
-#include <list>
+#include <vector>
 #include <memory>
 #include <utility>
 
@@ -11,6 +11,12 @@
 #include "codegen.hh"
 
 namespace explain {
+
+namespace CodeGen {
+
+class Context;
+
+} // end namespace Context
 
 namespace AST {
 
@@ -89,8 +95,8 @@ public:
 class Root : public Node
 {
 public:
-    std::list<std::unique_ptr<FuncDecl>> funcDecls;
-    std::list<std::unique_ptr<Stmt>> topLevelStmts;
+    std::vector<std::unique_ptr<FuncDecl>> funcDecls;
+    std::vector<std::unique_ptr<Stmt>> topLevelStmts;
 
     Root() = default;
     void print(int level) override;
@@ -102,13 +108,14 @@ public:
     Stmt() = default;
     ~Stmt() override = default;
     void print(int level) override;
+    virtual llvm::Value *codegen(CodeGen::Context& ctx) = 0;
     bool validAtTopLevel() override;
 };
 
 class BlockStmt : public Node
 {
 public:
-    std::list<std::unique_ptr<Stmt>> stmts;
+    std::vector<std::unique_ptr<Stmt>> stmts;
 
     BlockStmt() = default;
     void print(int level) override;
@@ -137,7 +144,9 @@ public:
 
     AssignmentStmt(std::string ident, std::unique_ptr<Expr> expr)
         : ident(std::move(ident)), expr(std::move(expr)) {}
+    ~AssignmentStmt() override = default;
     void print(int level) override;
+    llvm::Value *codegen(CodeGen::Context& ctx) override;
 };
 
 class IfStmt : public Stmt
@@ -148,7 +157,9 @@ public:
 
     IfStmt(std::unique_ptr<Cond> cond, std::unique_ptr<BlockStmt> then, std::unique_ptr<BlockStmt> otherwise)
         : cond(std::move(cond)), then(std::move(then)), otherwise(std::move(otherwise)) {}
+    ~IfStmt() override = default;
     void print(int level) override;
+    llvm::Value *codegen(CodeGen::Context& ctx) override;
 };
 
 class WhileStmt : public Stmt
@@ -159,7 +170,9 @@ public:
 
     WhileStmt(std::unique_ptr<Cond> cond, std::unique_ptr<BlockStmt> loop)
         : cond(std::move(cond)), loop(std::move(loop)) {}
+    ~WhileStmt() override = default;
     void print(int level) override;
+    llvm::Value *codegen(CodeGen::Context& ctx) override;
 };
 
 class ReturnStmt : public Stmt
@@ -169,7 +182,9 @@ public:
 
     explicit ReturnStmt(std::unique_ptr<Expr> expr)
         : expr(std::move(expr)) {}
+    ~ReturnStmt() override = default;
     void print(int level) override;
+    llvm::Value *codegen(CodeGen::Context& ctx) override;
 };
 
 class IOStmt : public Stmt
@@ -180,7 +195,9 @@ public:
 
     IOStmt(Operator op, std::string ident)
         : op(op), ident(std::move(ident)) {}
+    ~IOStmt() override = default;
     void print(int level) override;
+    llvm::Value *codegen(CodeGen::Context& ctx) override;
 };
 
 class Expr : public Node
@@ -293,7 +310,7 @@ public:
 class FuncDeclArgs : public Node
 {
 public:
-    std::list<std::string> idents;
+    std::vector<std::string> idents;
 
     FuncDeclArgs() = default;
     void print(int level) override;
@@ -302,7 +319,7 @@ public:
 class FuncCallArgs : public Node
 {
 public:
-    std::list<std::unique_ptr<Expr>> exprs;
+    std::vector<std::unique_ptr<Expr>> exprs;
 
     FuncCallArgs() = default;
     void print(int level) override;

@@ -1,5 +1,9 @@
 #include <iostream>
+#include <utility>
 
+#include <llvm/Support/raw_ostream.h>
+
+#include "codegen.hh"
 #include "driver.hh"
 
 int
@@ -21,6 +25,18 @@ main(int argc, char *argv[])
         else if (!drv.parse(argv[i]))
         {
             drv.root->print(0);
+
+            explain::CodeGen::Context ctx;
+            ctx.initialize();
+
+            ctx.codegen(std::move(drv.root));
+
+            std::string Str;
+            llvm::raw_string_ostream OS(Str);
+            OS << *ctx.TheModule;
+            OS.flush();
+
+            std::cout << Str << std::endl;
         }
         else
         {
