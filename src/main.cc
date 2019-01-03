@@ -1,10 +1,8 @@
 #include <iostream>
 #include <utility>
 
-#include <llvm/Support/raw_ostream.h>
-
-#include "codegen.hh"
 #include "driver.hh"
+#include "canonicalizer.hh"
 #include "printer.hh"
 
 int
@@ -25,8 +23,10 @@ main(int argc, char *argv[])
         }
         else if (!drv.parse(argv[i]))
         {
-            explain::Printer p;
+            explain::Canonicalizer c;
+            explain::PrettyPrinter p;
 
+            drv.root->accept(c);
             drv.root->accept(p);
 
             /*explain::CodeGen::Context ctx;

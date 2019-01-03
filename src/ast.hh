@@ -8,17 +8,34 @@
 
 #include <llvm/IR/Value.h>
 
-#include "ast_decls.inc"
-
-#include "codegen.hh"
-
 namespace explain {
-
-namespace CodeGen { class Context; }
 
 namespace AST {
 
-class Visitor
+class Node;
+class Root;
+class BlockStmt;
+class FuncDeclArgs;
+class FuncCallArgs;
+class Entry;
+class Stmt;
+class FuncDecl;
+class AssignmentStmt;
+class IfStmt;
+class WhileStmt;
+class ReturnStmt;
+class IOStmt;
+class Expr;
+class ExprBinOp;
+class ExprIdent;
+class ExprNumber;
+class ExprFuncCall;
+class Cond;
+class CondUnOp;
+class CondBinOp;
+class CondCompOp;
+
+class Consumer
 {
 public:
     virtual void visit(AST::Root *root) = 0;
@@ -44,6 +61,32 @@ public:
     virtual void visit(AST::CondCompOp *cond) = 0;
 };
 
+enum class NodeType
+{
+    NODE,
+    ROOT,
+    BLOCK_STMT,
+    FUNC_DECL_ARGS,
+    FUNC_CALL_ARGS,
+    ENTRY,
+    STMT,
+    FUNC_DECL,
+    ASSIGNMENT_STMT,
+    IF_STMT,
+    WHILE_STMT,
+    RETURN_STMT,
+    IO_STMT,
+    EXPR,
+    EXPR_BIN_OP,
+    EXPR_IDENT,
+    EXPR_NUMBER,
+    EXPR_FUNC_CALL,
+    COND,
+    COND_UN_OP,
+    COND_BIN_OP,
+    COND_COMP_OP
+};
+
 enum class Operator
 {
     INPUT,
@@ -64,22 +107,14 @@ enum class Operator
 
 std::string get_op_repr(Operator);
 
-enum class StatementType
-{
-    ASSIGNMENT,
-    IF,
-    WHILE,
-    RETURN,
-    IO
-};
-
 /// Base class for all Abstract Syntax Tree (AST) classes.
 class Node
 {
 public:
     Node() = default;
     virtual ~Node() = default;
-    virtual void accept(Visitor&) = 0;
+    virtual void accept(Consumer&) = 0;
+    virtual NodeType getNodeType() { return NodeType::NODE; }
 };
 
 //===--------------------------------------------------------------------------------===//
@@ -94,7 +129,8 @@ public:
 
     Root() = default;
     ~Root() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::ROOT; }
 };
 
 //===--------------------------------------------------------------------------------===//
@@ -110,7 +146,8 @@ public:
     explicit BlockStmt(std::vector<std::unique_ptr<Stmt>> stmts)
         : stmts(std::move(stmts)) {}
     ~BlockStmt() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::BLOCK_STMT; }
 };
 
 class FuncDeclArgs : public Node
@@ -122,7 +159,8 @@ public:
     explicit FuncDeclArgs(std::vector<std::string> idents)
         : idents(std::move(idents)) {}
     ~FuncDeclArgs() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::FUNC_DECL_ARGS; }
 };
 
 class FuncCallArgs : public Node
@@ -134,7 +172,8 @@ public:
     explicit FuncCallArgs(std::vector<std::unique_ptr<Expr>> exprs)
         : exprs(std::move(exprs)) {}
     ~FuncCallArgs() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::FUNC_CALL_ARGS; }
 };
 
 //===--------------------------------------------------------------------------------===//
@@ -148,9 +187,8 @@ class Entry : public Node
 public:
     Entry() = default;
     ~Entry() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
-
-    virtual bool validAtTopLevel() = 0;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::ENTRY; }
 };
 
 
@@ -159,12 +197,8 @@ class Stmt : public Entry
 public:
     Stmt() = default;
     ~Stmt() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
-
-
-    virtual llvm::Value *codegen(CodeGen::Context& ctx) = 0;
-    bool validAtTopLevel() override;
-    virtual StatementType getType() = 0;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::STMT; }
 };
 
 class FuncDecl : public Entry
@@ -174,13 +208,13 @@ public:
     std::unique_ptr<FuncDeclArgs> args;
     std::unique_ptr<BlockStmt> body;
 
-    FuncDecl(std::string ident, std::unique_ptr<FuncDeclArgs> args, std::unique_ptr<BlockStmt> body)
-            : ident(std::move(ident)), args(std::move(args)), body(std::move(body)) {}
-    ~FuncDecl() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
+    bool isXplnEntry;
 
-    llvm::Function *codegen(CodeGen::Context& ctx);
-    bool validAtTopLevel() override;
+    FuncDecl(std::string ident, std::unique_ptr<FuncDeclArgs> args, std::unique_ptr<BlockStmt> body)
+            : ident(std::move(ident)), args(std::move(args)), body(std::move(body)), isXplnEntry(false) {}
+    ~FuncDecl() override = default;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::FUNC_DECL; }
 };
 
 //===--------------------------------------------------------------------------------===//
@@ -196,10 +230,8 @@ public:
     AssignmentStmt(std::string ident, std::unique_ptr<Expr> expr)
             : ident(std::move(ident)), expr(std::move(expr)) {}
     ~AssignmentStmt() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
-
-    llvm::Value *codegen(CodeGen::Context& ctx) override;
-    StatementType getType() override;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::ASSIGNMENT_STMT; }
 };
 
 class IfStmt : public Stmt
@@ -211,10 +243,8 @@ public:
     IfStmt(std::unique_ptr<Cond> cond, std::unique_ptr<BlockStmt> then, std::unique_ptr<BlockStmt> otherwise)
             : cond(std::move(cond)), then(std::move(then)), otherwise(std::move(otherwise)) {}
     ~IfStmt() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
-
-    llvm::Value *codegen(CodeGen::Context& ctx) override;
-    StatementType getType() override;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::IF_STMT; }
 };
 
 class WhileStmt : public Stmt
@@ -226,10 +256,8 @@ public:
     WhileStmt(std::unique_ptr<Cond> cond, std::unique_ptr<BlockStmt> loop)
             : cond(std::move(cond)), loop(std::move(loop)) {}
     ~WhileStmt() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
-
-    llvm::Value *codegen(CodeGen::Context& ctx) override;
-    StatementType getType() override;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::WHILE_STMT; }
 };
 
 class ReturnStmt : public Stmt
@@ -240,10 +268,8 @@ public:
     explicit ReturnStmt(std::unique_ptr<Expr> expr)
             : expr(std::move(expr)) {}
     ~ReturnStmt() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
-
-    llvm::Value *codegen(CodeGen::Context& ctx) override;
-    StatementType getType() override;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::RETURN_STMT; }
 };
 
 class IOStmt : public Stmt
@@ -255,10 +281,8 @@ public:
     IOStmt(Operator op, std::string ident)
             : op(op), ident(std::move(ident)) {}
     ~IOStmt() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
-
-    llvm::Value *codegen(CodeGen::Context& ctx) override;
-    StatementType getType() override;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::IO_STMT; }
 };
 
 //===--------------------------------------------------------------------------------===//
@@ -270,9 +294,8 @@ class Expr : public Node
 public:
     Expr() = default;
     ~Expr() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
-
-    virtual llvm::Value *codegen(CodeGen::Context& ctx) = 0;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::EXPR; }
 };
 
 class ExprBinOp : public Expr
@@ -284,9 +307,8 @@ public:
     ExprBinOp(Operator op, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs)
         : op(op), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
     ~ExprBinOp() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
-
-    llvm::Value *codegen(CodeGen::Context& ctx) override;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::EXPR_BIN_OP; }
 };
 
 class ExprIdent : public Expr
@@ -297,9 +319,8 @@ public:
     explicit ExprIdent(std::string ident)
         : ident(std::move(ident)) {}
     ~ExprIdent() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
-
-    llvm::Value *codegen(CodeGen::Context& ctx) override;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::EXPR_IDENT; }
 };
 
 class ExprNumber : public Expr
@@ -310,9 +331,8 @@ public:
     explicit ExprNumber(double number)
         : number(number) {}
     ~ExprNumber() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
-
-    llvm::Value *codegen(CodeGen::Context& ctx) override;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::EXPR_NUMBER; }
 };
 
 class ExprFuncCall : public Expr
@@ -324,9 +344,8 @@ public:
     ExprFuncCall(std::string ident, std::unique_ptr<FuncCallArgs> args)
         : ident(std::move(ident)), args(std::move(args)) {}
     ~ExprFuncCall() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
-
-    llvm::Value *codegen(CodeGen::Context& ctx) override;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::EXPR_FUNC_CALL; }
 };
 
 //===--------------------------------------------------------------------------------===//
@@ -338,9 +357,8 @@ class Cond : public Node
 public:
     Cond() = default;
     ~Cond() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
-
-    virtual llvm::Value *codegen(CodeGen::Context& ctx) = 0;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::COND; }
 };
 
 class CondUnOp : public Cond
@@ -352,9 +370,8 @@ public:
     CondUnOp(Operator op, std::unique_ptr<Cond> cond)
         : op(op), cond(std::move(cond)) {}
     ~CondUnOp() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
-
-    llvm::Value *codegen(CodeGen::Context& ctx) override;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::COND_UN_OP; }
 };
 
 class CondBinOp : public Cond
@@ -366,9 +383,8 @@ public:
     CondBinOp(Operator op, std::unique_ptr<Cond> lhs, std::unique_ptr<Cond> rhs)
         : op(op), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
     ~CondBinOp() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
-
-    llvm::Value *codegen(CodeGen::Context& ctx) override;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::COND_BIN_OP; }
 };
 
 class CondCompOp : public Cond
@@ -380,9 +396,8 @@ public:
     CondCompOp(Operator op, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs)
         : op(op), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
     ~CondCompOp() override = default;
-    void accept(Visitor& v) override { v.visit(this); }
-
-    llvm::Value *codegen(CodeGen::Context& ctx) override;
+    void accept(Consumer& v) override { v.visit(this); }
+    NodeType getNodeType() override { return NodeType::COND_COMP_OP; }
 };
 
 } // end namespace AST

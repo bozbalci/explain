@@ -30,7 +30,6 @@ public:
         : Builder(llvm::IRBuilder<>(TheContext)), currentBlock(nullptr) {}
 
     void initialize();
-    void codegen(std::unique_ptr<AST::Root> root);
 
     llvm::Function *GetCurrentFunction();
     llvm::AllocaInst *EmitEntryBlockAlloca(llvm::Function *TheFunction, std::string VarName);

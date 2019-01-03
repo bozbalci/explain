@@ -3,53 +3,81 @@
 namespace explain {
 
 std::string
-Printer::spaces()
+PrettyPrinter::spaces()
 {
     return std::string(static_cast<unsigned long>(level * 2), ' ');
 }
 
 void
-Printer::indent()
+PrettyPrinter::indent()
 {
     level++;
 }
 
 void
-Printer::dedent()
+PrettyPrinter::dedent()
 {
     level--;
 }
 
-void
-Printer::visit(AST::Root *root)
+std::string PrettyPrinter::operatorToString(AST::Operator op)
 {
-    for (auto& e : root->funcDecls)
-        e->accept(*this);
-
-    std::cout << spaces() << "main" << std::endl;
-
-    indent();
-    for (auto& e : root->topLevelStmts)
-        e->accept(*this);
-    dedent();
+    switch (op)
+    {
+        case AST::Operator::INPUT:
+            return "input";
+        case AST::Operator::OUTPUT:
+            return "output";
+        case AST::Operator::PLUS:
+            return "+";
+        case AST::Operator::MINUS:
+            return "-";
+        case AST::Operator::TIMES:
+            return "*";
+        case AST::Operator::DIV:
+            return "/";
+        case AST::Operator::NOT:
+            return "!";
+        case AST::Operator::AND:
+            return "and";
+        case AST::Operator::OR:
+            return "or";
+        case AST::Operator::LT:
+            return "<";
+        case AST::Operator::LTEQ:
+            return "<=";
+        case AST::Operator::EQ:
+            return "==";
+        case AST::Operator::GTEQ:
+            return ">=";
+        case AST::Operator::GT:
+            return ">";
+    }
 }
 
 void
-Printer::visit(AST::BlockStmt *block)
+PrettyPrinter::visit(AST::Root *root)
+{
+    for (auto& e : root->funcDecls)
+        e->accept(*this);
+}
+
+void
+PrettyPrinter::visit(AST::BlockStmt *block)
 {
     for (auto& e : block->stmts)
         e->accept(*this);
 }
 
 void
-Printer::visit(AST::FuncDeclArgs *args)
+PrettyPrinter::visit(AST::FuncDeclArgs *args)
 {
     for (auto &ident : args->idents)
         std::cout << spaces() << "arg " << ident << std::endl;
 }
 
 void
-Printer::visit(AST::FuncCallArgs *args)
+PrettyPrinter::visit(AST::FuncCallArgs *args)
 {
     for (auto& expr : args->exprs)
     {
@@ -62,19 +90,19 @@ Printer::visit(AST::FuncCallArgs *args)
 }
 
 void
-Printer::visit(AST::Entry *entry)
+PrettyPrinter::visit(AST::Entry *entry)
 {
     std::cout << spaces() << "entry" << std::endl;
 }
 
 void
-Printer::visit(AST::Stmt *stmt)
+PrettyPrinter::visit(AST::Stmt *stmt)
 {
     std::cout << spaces() << "stmt" << std::endl;
 }
 
 void
-Printer::visit(explain::AST::FuncDecl *decl)
+PrettyPrinter::visit(explain::AST::FuncDecl *decl)
 {
     std::cout << spaces() << "fun " << decl->ident << std::endl;
 
@@ -99,7 +127,7 @@ Printer::visit(explain::AST::FuncDecl *decl)
 }
 
 void
-Printer::visit(AST::AssignmentStmt *stmt)
+PrettyPrinter::visit(AST::AssignmentStmt *stmt)
 {
     std::cout << spaces() << ":= " << stmt->ident << std::endl;
 
@@ -109,7 +137,7 @@ Printer::visit(AST::AssignmentStmt *stmt)
 }
 
 void
-Printer::visit(AST::IfStmt *stmt)
+PrettyPrinter::visit(AST::IfStmt *stmt)
 {
     std::cout << spaces() << "if" << std::endl;
 
@@ -138,7 +166,7 @@ Printer::visit(AST::IfStmt *stmt)
 }
 
 void
-Printer::visit(AST::WhileStmt *stmt)
+PrettyPrinter::visit(AST::WhileStmt *stmt)
 {
     std::cout << spaces() << "while" << std::endl;
 
@@ -159,7 +187,7 @@ Printer::visit(AST::WhileStmt *stmt)
 }
 
 void
-Printer::visit(AST::ReturnStmt *stmt)
+PrettyPrinter::visit(AST::ReturnStmt *stmt)
 {
     std::cout << spaces() << "return" << std::endl;
 
@@ -172,21 +200,21 @@ Printer::visit(AST::ReturnStmt *stmt)
 }
 
 void
-Printer::visit(AST::IOStmt *stmt)
+PrettyPrinter::visit(AST::IOStmt *stmt)
 {
-    std::cout << spaces() << AST::get_op_repr(stmt->op) << ' ' << stmt->ident << std::endl;
+    std::cout << spaces() << operatorToString(stmt->op) << ' ' << stmt->ident << std::endl;
 }
 
 void
-Printer::visit(AST::Expr *expr)
+PrettyPrinter::visit(AST::Expr *expr)
 {
     std::cout << spaces() << "expr" << std::endl;
 }
 
 void
-Printer::visit(AST::ExprBinOp *expr)
+PrettyPrinter::visit(AST::ExprBinOp *expr)
 {
-    std::cout << spaces() << AST::get_op_repr(expr->op) << std::endl;
+    std::cout << spaces() << operatorToString(expr->op) << std::endl;
 
     if (expr->lhs)
     {
@@ -204,19 +232,19 @@ Printer::visit(AST::ExprBinOp *expr)
 }
 
 void
-Printer::visit(AST::ExprIdent *expr)
+PrettyPrinter::visit(AST::ExprIdent *expr)
 {
     std::cout << spaces() << expr->ident << std::endl;
 }
 
 void
-Printer::visit(AST::ExprNumber *expr)
+PrettyPrinter::visit(AST::ExprNumber *expr)
 {
     std::cout << spaces() << expr->number << std::endl;
 }
 
 void
-Printer::visit(AST::ExprFuncCall *expr)
+PrettyPrinter::visit(AST::ExprFuncCall *expr)
 {
     std::cout << spaces() << "call " << expr->ident << std::endl;
 
@@ -231,14 +259,15 @@ Printer::visit(AST::ExprFuncCall *expr)
 }
 
 void
-Printer::visit(AST::Cond *cond)
+PrettyPrinter::visit(AST::Cond *cond)
 {
     std::cout << spaces() << "cond" << std::endl;
 }
 
-void Printer::visit(AST::CondUnOp *cond)
+void
+PrettyPrinter::visit(AST::CondUnOp *cond)
 {
-    std::cout << spaces() << AST::get_op_repr(cond->op) << std::endl;
+    std::cout << spaces() << operatorToString(cond->op) << std::endl;
 
     if (cond->cond)
     {
@@ -249,9 +278,9 @@ void Printer::visit(AST::CondUnOp *cond)
 }
 
 void
-Printer::visit(AST::CondBinOp *cond)
+PrettyPrinter::visit(AST::CondBinOp *cond)
 {
-    std::cout << spaces() << AST::get_op_repr(cond->op) << std::endl;
+    std::cout << spaces() << operatorToString(cond->op) << std::endl;
 
     if (cond->lhs)
     {
@@ -266,13 +295,12 @@ Printer::visit(AST::CondBinOp *cond)
         cond->rhs->accept(*this);
         dedent();
     }
-
 }
 
 void
-Printer::visit(AST::CondCompOp *cond)
+PrettyPrinter::visit(AST::CondCompOp *cond)
 {
-    std::cout << spaces() << AST::get_op_repr(cond->op) << std::endl;
+    std::cout << spaces() << operatorToString(cond->op) << std::endl;
 
     if (cond->lhs)
     {

@@ -14,7 +14,6 @@
     #include <utility>
 
     #include "../src/ast.hh"
-    #include "../src/util.hh"
 
     class Driver;
 }
@@ -29,6 +28,13 @@
 
 %code {
     #include "../src/driver.hh"
+
+    template<typename D, typename B>
+    std::unique_ptr<D> downcast(std::unique_ptr<B> &&p)
+    {
+        auto d = static_cast<D *>(p.release());
+        return std::unique_ptr<D>(d);
+    }
 }
 
 %define api.token.prefix {TOK_}
@@ -113,14 +119,14 @@ file_input
 entries
     : entry
         { $$ = std::make_unique<explain::AST::Root>();
-          if ($1->validAtTopLevel())
+          if ($1->getNodeType() == explain::AST::NodeType::FUNC_DECL)
               $$->funcDecls.push_back(downcast<explain::AST::FuncDecl, explain::AST::Entry>(std::move($1)));
           else
               $$->topLevelStmts.push_back(downcast<explain::AST::Stmt, explain::AST::Entry>(std::move($1)));
         }
     | entries entry
         { $$ = std::move($1);
-          if ($2->validAtTopLevel())
+          if ($2->getNodeType() == explain::AST::NodeType::FUNC_DECL)
               $$->funcDecls.push_back(downcast<explain::AST::FuncDecl, explain::AST::Entry>(std::move($2)));
           else
               $$->topLevelStmts.push_back(downcast<explain::AST::Stmt, explain::AST::Entry>(std::move($2)));

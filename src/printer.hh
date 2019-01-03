@@ -7,15 +7,16 @@
 
 namespace explain {
 
-class Printer : public AST::Visitor
+class PrettyPrinter : public AST::Consumer
 {
     int level;
 
     std::string spaces();
     void indent();
     void dedent();
+    std::string operatorToString(AST::Operator op);
 public:
-    Printer()
+    PrettyPrinter()
         : level(0) {}
 
     void visit(AST::Root *root) override;
