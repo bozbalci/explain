@@ -31,13 +31,16 @@ set(SOURCE_COMMON
         src/parser.yy
         src/scanner.ll
         src/main.cc
-        src/codegen.cc)
+        src/codegen.cc
+        src/printer.cc)
 
 set(HEADER_COMMON
         src/ast.hh
+        src/ast_decls.inc
         src/driver.hh
         src/codegen.hh
-        src/util.hh)
+        src/util.hh
+        src/printer.hh)
 
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})

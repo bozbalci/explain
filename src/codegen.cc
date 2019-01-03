@@ -51,21 +51,29 @@ Context::initialize()
 void
 Context::codegen(std::unique_ptr<AST::Root> root)
 {
-    // Generate code for every function
-
     for (auto& f : root->funcDecls)
-    {
         f->codegen(*this);
-    }
 
-    // Create main function and generate code for main
-    // TODO Implement me!
+    // Handle top level statements by creating a dangling AST::FuncDecl node, and creating code for it after code has
+    // been generated for all other functions.
+    auto mainBody = std::make_unique<AST::BlockStmt>(std::move(root->topLevelStmts));
+    auto args = std::make_unique<AST::FuncDeclArgs>();
+    auto mainFuncDecl = std::make_unique<AST::FuncDecl>("main", std::move(args), std::move(mainBody));
+
+    mainFuncDecl->codegen(*this);
+
+    // Can perform module-level passes in here
 }
 
 llvm::Function *
 Context::GetCurrentFunction()
 {
-    return TheModule->getFunction(ScopeName);
+    llvm::Function *F = TheModule->getFunction(ScopeName);
+
+    if (!F)
+        LogErrorV("fatal error: cannot determine scope");
+
+    return F;
 }
 
 llvm::AllocaInst *
@@ -107,6 +115,7 @@ AST::FuncDecl::codegen(CodeGen::Context &ctx)
 
     llvm::BasicBlock *BB = llvm::BasicBlock::Create(ctx.TheContext, "entry", F);
     ctx.Builder.SetInsertPoint(BB);
+    ctx.currentBlock = BB;
 
     // Set up local variables, install arguments into local scope.
     ctx.LocalVars.clear();
@@ -148,14 +157,13 @@ AST::AssignmentStmt::codegen(CodeGen::Context &ctx)
 {
     llvm::Function *F = ctx.GetCurrentFunction();
     if (!F)
-        return ctx.LogErrorV("fatal error: lost scope");
+        return nullptr;
 
     llvm::Value *Value = expr->codegen(ctx);
     if (!Value)
         return nullptr;
 
     llvm::Value *Variable = ctx.LocalVars[ident];
-
     if (!Variable)
     {
         // No AllocaInst exists in the corrent scope for the given identifier, so this is a first time assignment.
@@ -195,6 +203,7 @@ AST::IfStmt::codegen(CodeGen::Context &ctx)
 
     // Emit code for the "then" block.
     ctx.Builder.SetInsertPoint(ThenBB);
+    ctx.currentBlock = ThenBB;
     for (auto& Stmt : then->stmts)
     {
         llvm::Value *V =  Stmt->codegen(ctx);
@@ -209,6 +218,7 @@ AST::IfStmt::codegen(CodeGen::Context &ctx)
     // Emit code for the "else" block.
     F->getBasicBlockList().push_back(ElseBB);
     ctx.Builder.SetInsertPoint(ElseBB);
+    ctx.currentBlock = ElseBB;
     if (otherwise)
     {
         for (auto& Stmt : otherwise->stmts)
@@ -223,6 +233,7 @@ AST::IfStmt::codegen(CodeGen::Context &ctx)
     // Reorient the IRBuilder to the "merge" point, where subsequent instructions will be emitted to.
     F->getBasicBlockList().push_back(MergeBB);
     ctx.Builder.SetInsertPoint(MergeBB);
+    ctx.currentBlock = MergeBB;
 
     // It is appropriate for the IfStmt to return the `Value *` of the AST::Cond node, since it is guaranteed not to be
     // null at this point.
@@ -240,6 +251,7 @@ AST::WhileStmt::codegen(CodeGen::Context &ctx)
 
     // Emit code for "preloop".
     ctx.Builder.SetInsertPoint(PreLoopBB);
+    ctx.currentBlock = PreLoopBB;
     llvm::Value *CondV = cond->codegen(ctx);
 
     if (!CondV)
@@ -252,6 +264,7 @@ AST::WhileStmt::codegen(CodeGen::Context &ctx)
     // Emit code for "loop".
     F->getBasicBlockList().push_back(LoopBB);
     ctx.Builder.SetInsertPoint(LoopBB);
+    ctx.currentBlock = LoopBB;
 
     if (!loop)
         return nullptr;
@@ -270,6 +283,7 @@ AST::WhileStmt::codegen(CodeGen::Context &ctx)
     // Reorient the IRBuilder to the "merge" point, where subsequent instructions will be emitted to.
     F->getBasicBlockList().push_back(PostLoopBB);
     ctx.Builder.SetInsertPoint(PostLoopBB);
+    ctx.currentBlock = PostLoopBB;
 
     // It is appropriate for the WhileStmt to return the `Value *` of the AST::Cond node, since it is guaranteed not to
     // be null at this point.
@@ -282,6 +296,15 @@ AST::ReturnStmt::codegen(CodeGen::Context &ctx)
     llvm::Value *V = expr->codegen(ctx);
     if (!V)
         return nullptr;
+
+    // TODO This is a hack
+    if (ctx.currentBlock->getTerminator())
+    {
+        ctx.LogErrorV("cannot insert return, basic block already terminated");
+
+        // Return a not-null value so that code generation still continues
+        return V;
+    }
 
     ctx.Builder.CreateRet(V);
     return V;

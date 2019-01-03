@@ -13,34 +13,6 @@
 
 namespace explain {
 
-// TODO Common forward declarations of classes, is there a better solution?
-namespace AST {
-
-class Node;
-class Entry;
-class Root;
-class Stmt;
-class BlockStmt;
-class FuncDecl;
-class AssignmentStmt;
-class IfStmt;
-class WhileStmt;
-class ReturnStmt;
-class IOStmt;
-class Expr;
-class ExprBinOp;
-class ExprIdent;
-class ExprNumber;
-class ExprFuncCall;
-class Cond;
-class CondUnOp;
-class CondBinOp;
-class CondCompOp;
-class FuncDeclArgs;
-class FuncCallArgs;
-
-} // end namespace AST
-
 namespace CodeGen {
 
 class Context {
@@ -52,9 +24,10 @@ public:
     std::map<std::string, llvm::AllocaInst *> LocalVars;
 
     std::string ScopeName;
+    llvm::BasicBlock *currentBlock;
 
     Context()
-        : Builder(llvm::IRBuilder<>(TheContext)) {}
+        : Builder(llvm::IRBuilder<>(TheContext)), currentBlock(nullptr) {}
 
     void initialize();
     void codegen(std::unique_ptr<AST::Root> root);

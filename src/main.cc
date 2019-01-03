@@ -5,6 +5,7 @@
 
 #include "codegen.hh"
 #include "driver.hh"
+#include "printer.hh"
 
 int
 main(int argc, char *argv[])
@@ -24,7 +25,11 @@ main(int argc, char *argv[])
         }
         else if (!drv.parse(argv[i]))
         {
-            explain::CodeGen::Context ctx;
+            explain::Printer p;
+
+            drv.root->accept(p);
+
+            /*explain::CodeGen::Context ctx;
             ctx.initialize();
 
             ctx.codegen(std::move(drv.root));
@@ -34,7 +39,7 @@ main(int argc, char *argv[])
             OS << *ctx.TheModule;
             OS.flush();
 
-            std::cout << Str << std::endl;
+            std::cout << Str << std::endl;*/
         }
         else
         {
