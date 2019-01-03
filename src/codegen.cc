@@ -34,11 +34,11 @@ Context::initialize()
 
     TheFPM = std::make_unique<llvm::legacy::FunctionPassManager>(TheModule.get());
 
-    // Promote allocas to registers (mem2reg).
+    // Promote `Alloca`s to registers (mem2reg).
     TheFPM->add(llvm::createPromoteMemoryToRegisterPass());
     // Peephole optimizations and bit-twiddling optzns. (Cool abbreviation, huh?)
     TheFPM->add(llvm::createInstructionCombiningPass());
-    // Reassociate expressions.
+    // Re-associate expressions.
     TheFPM->add(llvm::createReassociatePass());
     // Eliminate common subexpressions.
     TheFPM->add(llvm::createGVNPass());
@@ -130,8 +130,16 @@ AST::FuncDecl::codegen(CodeGen::Context &ctx)
         }
     }
 
-    llvm::verifyFunction(*F);
-    ctx.TheFPM->run(*F);
+    std::string Str;
+    llvm::raw_string_ostream OS(Str);
+    if (llvm::verifyFunction(*F, &OS))
+    {
+        OS.flush();
+        std::cerr << "==LLVM== Verification of function '" << ident << "' failed: " << Str;
+    }
+
+    // TODO Do not run optimization passes because they cause all kinds of terror when the LLVM verification fails!
+    //  ctx.TheFPM->run(*F);
     return F;
 }
 
@@ -177,8 +185,7 @@ AST::IfStmt::codegen(CodeGen::Context &ctx)
     llvm::Value *BoolV = ctx.Builder.CreateFCmpONE(CondV,
         llvm::ConstantFP::get(ctx.TheContext, llvm::APFloat(0.0)), "ifcond");
 
-    // TODO May need to replace this with ctx.Builder.GetInsertBlock()->getParent();
-    llvm::Function *F = ctx.GetCurrentFunction();
+    llvm::Function *F = ctx.Builder.GetInsertBlock()->getParent();
 
     llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(ctx.TheContext, "then", F);
     llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(ctx.TheContext, "else", F);

@@ -60,3 +60,9 @@ add_executable(explain ${SOURCE_COMMON} ${HEADER_COMMON}
 
 # Link LLVM libraries to the compiler
 target_link_libraries(explain ${LLVM_LIBS})
+
+# Uncomment to enable AddressSanitizer
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fsanitize=leak -g")
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fsanitize=address -fsanitize=leak -g")
+# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address -fsanitize=leak -g")
+# set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=address -fsanitize-leak -g")

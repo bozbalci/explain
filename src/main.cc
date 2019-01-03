@@ -24,8 +24,6 @@ main(int argc, char *argv[])
         }
         else if (!drv.parse(argv[i]))
         {
-            drv.root->print(0);
-
             explain::CodeGen::Context ctx;
             ctx.initialize();
 
