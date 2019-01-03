@@ -27,11 +27,12 @@ class Canonicalizer : public AST::Consumer
 {
     std::string mangledMain;
     int errorCount;
+    bool encounteredReturnStmt;
 
     void reportError(std::string msg);
 public:
     Canonicalizer()
-        : errorCount(0), mangledMain("main-mangled") {}
+        : errorCount(0), mangledMain("main-mangled"), encounteredReturnStmt(false) {}
 
     void visit(AST::Root *root) override;
     void visit(AST::BlockStmt *block) override;

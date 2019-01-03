@@ -38,18 +38,13 @@ Canonicalizer::visit(AST::BlockStmt *block)
     for (auto it = block->stmts.begin(); it != block->stmts.end(); )
     {
         if (prune)
-        {
             it = block->stmts.erase(it);
-            continue;
-        }
         else
         {
             it->get()->accept(*this);
 
             if (it->get()->getNodeType() == AST::NodeType::RETURN_STMT)
-            {
                 prune = true;
-            }
 
             it++;
         }
@@ -84,6 +79,8 @@ Canonicalizer::visit(AST::Stmt *stmt)
 void
 Canonicalizer::visit(AST::FuncDecl *decl)
 {
+    encounteredReturnStmt = false;
+
     if (!decl->isXplnEntry && decl->ident == "main")
         decl->ident = mangledMain;
 
@@ -102,6 +99,15 @@ Canonicalizer::visit(AST::FuncDecl *decl)
         return;
     }
     decl->body->accept(*this);
+
+    if (!encounteredReturnStmt)
+    {
+        reportError("no ReturnStmt inside block of FuncDecl");
+
+        return;
+    }
+
+    encounteredReturnStmt = false;
 }
 
 void
@@ -169,6 +175,8 @@ Canonicalizer::visit(AST::ReturnStmt *stmt)
         return;
     }
     stmt->expr->accept(*this);
+
+    encounteredReturnStmt = true;
 }
 
 void
