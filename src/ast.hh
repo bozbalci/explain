@@ -6,8 +6,6 @@
 #include <memory>
 #include <utility>
 
-#include <llvm/IR/Value.h>
-
 namespace explain {
 
 namespace AST {
@@ -63,7 +61,6 @@ public:
 
 enum class NodeType
 {
-    NODE,
     ROOT,
     BLOCK_STMT,
     FUNC_DECL_ARGS,
@@ -105,8 +102,6 @@ enum class Operator
     GT
 };
 
-std::string get_op_repr(Operator);
-
 /// Base class for all Abstract Syntax Tree (AST) classes.
 class Node
 {
@@ -114,7 +109,7 @@ public:
     Node() = default;
     virtual ~Node() = default;
     virtual void accept(Consumer&) = 0;
-    virtual NodeType getNodeType() { return NodeType::NODE; }
+    virtual NodeType getNodeType() = 0;
 };
 
 //===--------------------------------------------------------------------------------===//
