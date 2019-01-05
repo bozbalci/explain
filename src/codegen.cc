@@ -277,10 +277,10 @@ CodeGenerator::visit(AST::ExprBinOp *expr)
             V = Builder.CreateFSub(Left, Right, "sub");
             break;
         case AST::Operator::TIMES:
-            V = Builder.CreateFMul(Left, Right, "sub");
+            V = Builder.CreateFMul(Left, Right, "mul");
             break;
         case AST::Operator::DIV:
-            V = Builder.CreateFDiv(Left, Right, "sub");
+            V = Builder.CreateFDiv(Left, Right, "div");
             break;
         default:
             return;
