@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -15,23 +16,35 @@ namespace po = boost::program_options;
 int
 main(int argc, char *argv[])
 {
-    po::options_description desc("Allowed options");
-    desc.add_options()
-            ("help,h", "produce this help message and exit")
-            ("trace-scan", "run scanner in debug mode")
-            ("trace-parse", "run parser in debug mode")
-            ("pretty-ast", "pretty-print the AST")
-            ("emit-llvm", "dump LLVM IR to output")
-            ("output,o", po::value<std::string>(), "file to save LLVM IR or object file to")
-            ("input", po::value<std::string>(), "input file")
+    po::options_description opts("General options");
+    opts.add_options()
+            ("help,h", "print this help message and exit")
+            ("version,v", "print version and exit")
+            ("input,i", po::value<std::string>(), "input file")
+            ("output,o", po::value<std::string>(), "output file")
             ;
 
+    po::options_description debug("Debugging options");
+    debug.add_options()
+            ("trace-scan", "run scanner in debug mode")
+            ("trace-parse", "run parser in debug mode")
+            ;
+
+    po::options_description ssel("Stage selection options");
+    ssel.add_options()
+            ("emit-ast", "emit AST in pretty-printed form")
+            ("emit-llvm", "emit LLVM representation only")
+            (",c", "generate object file")
+            ;
+
+    opts.add(debug).add(ssel);
+
     po::positional_options_description p;
-    p.add("input", -1);
+    p.add("input", 1);
 
     po::variables_map vm;
     po::store(po::command_line_parser(argc, argv)
-                .options(desc)
+                .options(opts)
                 .positional(p)
                 .run(), vm);
     po::notify(vm);
@@ -41,7 +54,17 @@ main(int argc, char *argv[])
 
     if (vm.count("help"))
     {
-        std::cout << desc << std::endl;
+        std::cout << "explain, the industrial grade XPLN compiler\n" << std::endl;
+        std::cout << opts << std::endl;
+        std::cout << "If no stage selection option is specified, then every stage will be run and"
+                     "\nthe linker is run to produce an executable." << std::endl;
+        std::exit(EXIT_SUCCESS);
+    }
+
+    if (vm.count("version"))
+    {
+        std::cout << "explain, the industrial grade XPLN compiler" << std::endl;
+        std::cout << "version: 1.0.0" << std::endl;
         std::exit(EXIT_SUCCESS);
     }
 
@@ -65,7 +88,7 @@ main(int argc, char *argv[])
     explain::Canonicalizer canonicalizer(&mi);
     d.accept(canonicalizer);
 
-    if (vm.count("pretty-ast"))
+    if (vm.count("emit-ast"))
     {
         std::ofstream outputFile(outputFileName);
 
@@ -87,5 +110,27 @@ main(int argc, char *argv[])
         std::exit(EXIT_SUCCESS);
     }
 
-    codeGenerator.emitObject(outputFileName);
+    if (vm.count("c"))
+    {
+        codeGenerator.emitObject(outputFileName);
+        std::exit(EXIT_SUCCESS);
+    }
+
+    // All options have been exhausted -- emit object and link.
+
+    // XXX std::tmpnam is deprecated, use something else here
+    std::string objectDestination(std::tmpnam(nullptr)), driverDestination(std::tmpnam(nullptr));
+
+    objectDestination += ".o";
+    driverDestination += ".c";
+
+    codeGenerator.emitObject(objectDestination);
+    codeGenerator.emitDriver(driverDestination);
+
+    std::stringstream cmd;
+    cmd << "cc -o " << outputFileName << " " << objectDestination << " " << driverDestination;
+
+    std::system(cmd.str().c_str());
+    std::remove(objectDestination.c_str());
+    std::remove(driverDestination.c_str());
 }

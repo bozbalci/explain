@@ -1,0 +1,6 @@
+while 1 > 0
+    input  foo;
+    output foo;
+endw;
+
+return 0;

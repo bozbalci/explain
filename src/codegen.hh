@@ -51,6 +51,7 @@ class CodeGenerator : public AST::Consumer
 public:
     explicit CodeGenerator(MessageIssuer *mi);
     void emitObject(const std::string& Filename);
+    void emitDriver(const std::string& Filename);
     void printModule(const std::string& Filename);
 
     void visit(AST::Root *root) override;

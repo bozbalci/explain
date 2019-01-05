@@ -1,5 +1,6 @@
 #include "codegen.hh"
 
+#include <fstream>
 #include <sstream>
 #include <vector>
 
@@ -85,6 +86,20 @@ void CodeGenerator::emitObject(const std::string& Filename)
 
     pass.run(*Module);
     dest.flush();
+}
+
+void
+CodeGenerator::emitDriver(const std::string& Filename)
+{
+    std::ofstream out(Filename);
+
+    out << "#include <stdio.h>\n"
+           "extern double xpln_main(void);\n"
+           "int main(int argc, char **argv) {\n"
+           "    double result = xpln_main();\n"
+           "    return (int) result;\n"
+           "}\n";
+    out.flush();
 }
 
 void
