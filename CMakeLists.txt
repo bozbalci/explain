@@ -7,7 +7,7 @@ set(CMAKE_PREFIX_PATH /usr/local/opt/bison/)
 
 # Set up project dependencies
 find_package(Boost 1.67 REQUIRED COMPONENTS
-        program_options)
+        filesystem program_options)
 find_package(FLEX 2.5 REQUIRED)
 find_package(BISON 3.2)
 find_package(LLVM 7.0 REQUIRED)

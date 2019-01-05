@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 
+#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 #include "canonicalizer.hh"
@@ -87,6 +88,7 @@ main(int argc, char *argv[])
 
     explain::Canonicalizer canonicalizer(&mi);
     d.accept(canonicalizer);
+    mi.checkpoint();
 
     if (vm.count("emit-ast"))
     {
@@ -101,14 +103,26 @@ main(int argc, char *argv[])
         }
     }
 
-    explain::CodeGenerator codeGenerator(&mi);
+    std::string moduleName;
+
+    if (inputFileName == "-")
+        moduleName = "stdin";
+    else
+    {
+        boost::filesystem::path p(inputFileName);
+        moduleName = p.filename().string();
+    }
+
+    explain::CodeGenerator codeGenerator(&mi, moduleName);
     d.accept(codeGenerator);
+    mi.checkpoint();
 
     if (vm.count("emit-llvm"))
     {
         codeGenerator.printModule(outputFileName);
         std::exit(EXIT_SUCCESS);
     }
+
 
     if (vm.count("c"))
     {
@@ -117,12 +131,8 @@ main(int argc, char *argv[])
     }
 
     // All options have been exhausted -- emit object and link.
-
-    // XXX std::tmpnam is deprecated, use something else here
-    std::string objectDestination(std::tmpnam(nullptr)), driverDestination(std::tmpnam(nullptr));
-
-    objectDestination += ".o";
-    driverDestination += ".c";
+    std::string objectDestination = boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.o").string();
+    std::string driverDestination = boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.c").string();
 
     codeGenerator.emitObject(objectDestination);
     codeGenerator.emitDriver(driverDestination);
@@ -133,4 +143,6 @@ main(int argc, char *argv[])
     std::system(cmd.str().c_str());
     std::remove(objectDestination.c_str());
     std::remove(driverDestination.c_str());
+
+    mi.checkpoint();
 }

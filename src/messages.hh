@@ -68,6 +68,16 @@ public:
     {
         return errorCount;
     }
+
+    void
+    checkpoint()
+    {
+        if (errorCount > 0)
+        {
+            std::cerr << errorCount << " errors generated." << std::endl;
+            std::exit(EXIT_FAILURE);
+        }
+    }
 };
 
 }

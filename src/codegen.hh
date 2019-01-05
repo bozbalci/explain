@@ -49,7 +49,8 @@ class CodeGenerator : public AST::Consumer
 
     llvm::AllocaInst *EmitEntryBlockAlloca(const std::string& VarName);
 public:
-    explicit CodeGenerator(MessageIssuer *mi);
+    explicit CodeGenerator(MessageIssuer *mi, const std::string& ModuleName);
+
     void emitObject(const std::string& Filename);
     void emitDriver(const std::string& Filename);
     void printModule(const std::string& Filename);

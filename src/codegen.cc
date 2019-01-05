@@ -6,7 +6,7 @@
 
 namespace explain {
 
-CodeGenerator::CodeGenerator(MessageIssuer *mi)
+CodeGenerator::CodeGenerator(MessageIssuer *mi, const std::string& ModuleName)
     : mi(mi), Builder(llvm::IRBuilder<>(Context)), V(nullptr)
 {
     llvm::InitializeAllTargetInfos();
@@ -29,7 +29,7 @@ CodeGenerator::CodeGenerator(MessageIssuer *mi)
     auto RM = llvm::Optional<llvm::Reloc::Model>();
     TargetMachine = Target->createTargetMachine(TargetTriple, CPU, Features, opt, RM);
 
-    Module = std::make_unique<llvm::Module>("explain", Context);
+    Module = std::make_unique<llvm::Module>(ModuleName, Context);
     Module->setDataLayout(TargetMachine->createDataLayout());
     Module->setTargetTriple(TargetTriple);
 
