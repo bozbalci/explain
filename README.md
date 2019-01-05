@@ -16,6 +16,7 @@ The project was built using the following tooling, earlier versions are not test
 
 * CMake >= 3.13
 * C++ compiler with C++14 core language support (gcc >= 5.1 or Clang >= 3.5)
+* Boost >= 1.60
 * `flex` >= 2.5
 * `bison` >= 3.2
 * LLVM >= 7.0.0

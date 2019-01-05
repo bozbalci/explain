@@ -73,7 +73,7 @@ void
 PrettyPrinter::visit(AST::FuncDeclArgs *args)
 {
     for (auto &ident : args->idents)
-        std::cout << spaces() << "arg " << ident << std::endl;
+        *out << spaces() << "arg " << ident << std::endl;
 }
 
 void
@@ -81,7 +81,7 @@ PrettyPrinter::visit(AST::FuncCallArgs *args)
 {
     for (auto& expr : args->exprs)
     {
-        std::cout << spaces() << "arg" << std::endl;
+        *out << spaces() << "arg" << std::endl;
 
         indent();
         expr->accept(*this);
@@ -92,24 +92,24 @@ PrettyPrinter::visit(AST::FuncCallArgs *args)
 void
 PrettyPrinter::visit(AST::Entry *entry)
 {
-    std::cout << spaces() << "entry" << std::endl;
+    *out << spaces() << "entry" << std::endl;
 }
 
 void
 PrettyPrinter::visit(AST::Stmt *stmt)
 {
-    std::cout << spaces() << "stmt" << std::endl;
+    *out << spaces() << "stmt" << std::endl;
 }
 
 void
 PrettyPrinter::visit(explain::AST::FuncDecl *decl)
 {
-    std::cout << spaces() << "fun " << decl->ident << std::endl;
+    *out << spaces() << "fun " << decl->ident << std::endl;
 
     if (decl->args)
     {
         indent();
-        std::cout << spaces() << "args" << std::endl;
+        *out << spaces() << "args" << std::endl;
 
         indent();
         decl->args->accept(*this);
@@ -125,13 +125,13 @@ PrettyPrinter::visit(explain::AST::FuncDecl *decl)
         dedent();
     }
 
-    std::cout << std::endl;
+    *out << std::endl;
 }
 
 void
 PrettyPrinter::visit(AST::AssignmentStmt *stmt)
 {
-    std::cout << spaces() << ":= " << stmt->ident << std::endl;
+    *out << spaces() << ":= " << stmt->ident << std::endl;
 
     indent();
     stmt->expr->accept(*this);
@@ -141,7 +141,7 @@ PrettyPrinter::visit(AST::AssignmentStmt *stmt)
 void
 PrettyPrinter::visit(AST::IfStmt *stmt)
 {
-    std::cout << spaces() << "if" << std::endl;
+    *out << spaces() << "if" << std::endl;
 
     if (stmt->cond)
     {
@@ -152,7 +152,7 @@ PrettyPrinter::visit(AST::IfStmt *stmt)
 
     if (stmt->then)
     {
-        std::cout << spaces() << "then" << std::endl;
+        *out << spaces() << "then" << std::endl;
         indent();
         stmt->then->accept(*this);
         dedent();
@@ -160,7 +160,7 @@ PrettyPrinter::visit(AST::IfStmt *stmt)
 
     if (stmt->otherwise)
     {
-        std::cout << spaces() << "else" << std::endl;
+        *out << spaces() << "else" << std::endl;
         indent();
         stmt->otherwise->accept(*this);
         dedent();
@@ -170,7 +170,7 @@ PrettyPrinter::visit(AST::IfStmt *stmt)
 void
 PrettyPrinter::visit(AST::WhileStmt *stmt)
 {
-    std::cout << spaces() << "while" << std::endl;
+    *out << spaces() << "while" << std::endl;
 
     if (stmt->cond)
     {
@@ -181,7 +181,7 @@ PrettyPrinter::visit(AST::WhileStmt *stmt)
 
     if (stmt->loop)
     {
-        std::cout << spaces() << "do" << std::endl;
+        *out << spaces() << "do" << std::endl;
         indent();
         stmt->loop->accept(*this);
         dedent();
@@ -191,7 +191,7 @@ PrettyPrinter::visit(AST::WhileStmt *stmt)
 void
 PrettyPrinter::visit(AST::ReturnStmt *stmt)
 {
-    std::cout << spaces() << "return" << std::endl;
+    *out << spaces() << "return" << std::endl;
 
     if (stmt->expr)
     {
@@ -204,19 +204,19 @@ PrettyPrinter::visit(AST::ReturnStmt *stmt)
 void
 PrettyPrinter::visit(AST::IOStmt *stmt)
 {
-    std::cout << spaces() << operatorToString(stmt->op) << ' ' << stmt->ident << std::endl;
+    *out << spaces() << operatorToString(stmt->op) << ' ' << stmt->ident << std::endl;
 }
 
 void
 PrettyPrinter::visit(AST::Expr *expr)
 {
-    std::cout << spaces() << "expr" << std::endl;
+    *out << spaces() << "expr" << std::endl;
 }
 
 void
 PrettyPrinter::visit(AST::ExprBinOp *expr)
 {
-    std::cout << spaces() << operatorToString(expr->op) << std::endl;
+    *out << spaces() << operatorToString(expr->op) << std::endl;
 
     if (expr->lhs)
     {
@@ -236,22 +236,22 @@ PrettyPrinter::visit(AST::ExprBinOp *expr)
 void
 PrettyPrinter::visit(AST::ExprIdent *expr)
 {
-    std::cout << spaces() << expr->ident << std::endl;
+    *out << spaces() << expr->ident << std::endl;
 }
 
 void
 PrettyPrinter::visit(AST::ExprNumber *expr)
 {
-    std::cout << spaces() << expr->number << std::endl;
+    *out << spaces() << expr->number << std::endl;
 }
 
 void
 PrettyPrinter::visit(AST::ExprFuncCall *expr)
 {
-    std::cout << spaces() << "call " << expr->ident << std::endl;
+    *out << spaces() << "call " << expr->ident << std::endl;
 
     indent();
-    std::cout << spaces() << "args" << std::endl;
+    *out << spaces() << "args" << std::endl;
 
     indent();
     expr->args->accept(*this);
@@ -263,13 +263,13 @@ PrettyPrinter::visit(AST::ExprFuncCall *expr)
 void
 PrettyPrinter::visit(AST::Cond *cond)
 {
-    std::cout << spaces() << "cond" << std::endl;
+    *out << spaces() << "cond" << std::endl;
 }
 
 void
 PrettyPrinter::visit(AST::CondUnOp *cond)
 {
-    std::cout << spaces() << operatorToString(cond->op) << std::endl;
+    *out << spaces() << operatorToString(cond->op) << std::endl;
 
     if (cond->cond)
     {
@@ -282,7 +282,7 @@ PrettyPrinter::visit(AST::CondUnOp *cond)
 void
 PrettyPrinter::visit(AST::CondBinOp *cond)
 {
-    std::cout << spaces() << operatorToString(cond->op) << std::endl;
+    *out << spaces() << operatorToString(cond->op) << std::endl;
 
     if (cond->lhs)
     {
@@ -302,7 +302,7 @@ PrettyPrinter::visit(AST::CondBinOp *cond)
 void
 PrettyPrinter::visit(AST::CondCompOp *cond)
 {
-    std::cout << spaces() << operatorToString(cond->op) << std::endl;
+    *out << spaces() << operatorToString(cond->op) << std::endl;
 
     if (cond->lhs)
     {

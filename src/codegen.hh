@@ -47,8 +47,8 @@ class CodeGenerator : public AST::Consumer
     llvm::AllocaInst *EmitEntryBlockAlloca(const std::string& VarName);
 public:
     explicit CodeGenerator(MessageIssuer *mi);
-    void emitObject();
-    void printModule();
+    void emitObject(const std::string& Filename);
+    void printModule(const std::string& Filename);
 
     void visit(AST::Root *root) override;
     void visit(AST::BlockStmt *block) override;

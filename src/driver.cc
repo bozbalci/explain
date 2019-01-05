@@ -13,3 +13,9 @@ Driver::parse(const std::string &f)
     scan_end();
     return res;
 }
+
+void
+Driver::accept(explain::AST::Consumer &consumer)
+{
+    root->accept(consumer);
+}

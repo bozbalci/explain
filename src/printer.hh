@@ -1,6 +1,7 @@
 #ifndef EXPLAIN_PRINTER_HH
 #define EXPLAIN_PRINTER_HH
 
+#include <fstream>
 #include <string>
 
 #include "ast.hh"
@@ -11,6 +12,7 @@ namespace explain {
 class PrettyPrinter : public AST::Consumer
 {
     MessageIssuer *mi;
+    std::ofstream *out;
 
     int level;
 
@@ -19,8 +21,8 @@ class PrettyPrinter : public AST::Consumer
     void dedent();
     std::string operatorToString(AST::Operator op);
 public:
-    explicit PrettyPrinter(MessageIssuer *mi)
-        : mi(mi), level(0) {}
+    explicit PrettyPrinter(MessageIssuer *mi, std::ofstream *out)
+        : mi(mi), level(0), out(out) {}
 
     void visit(AST::Root *root) override;
     void visit(AST::BlockStmt *block) override;

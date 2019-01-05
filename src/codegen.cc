@@ -47,9 +47,8 @@ CodeGenerator::CodeGenerator(MessageIssuer *mi)
     FPM->doInitialization();
 }
 
-void CodeGenerator::emitObject()
+void CodeGenerator::emitObject(const std::string& Filename)
 {
-    auto Filename = "output.o";
     std::error_code EC;
     llvm::raw_fd_ostream dest(Filename, EC, llvm::sys::fs::F_None);
 
@@ -66,13 +65,16 @@ void CodeGenerator::emitObject()
 }
 
 void
-CodeGenerator::printModule()
+CodeGenerator::printModule(const std::string& Filename)
 {
-    std::string str;
-    llvm::raw_string_ostream OS(str);
-    OS << *Module;
-    OS.flush();
-    std::cout << str;
+    std::error_code EC;
+    llvm::raw_fd_ostream dest(Filename, EC, llvm::sys::fs::F_None);
+
+    if (EC)
+        mi->fatal_error("could not open file: " + EC.message());
+
+    dest << *Module;
+    dest.flush();
 }
 
 llvm::AllocaInst *

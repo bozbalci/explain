@@ -28,6 +28,8 @@ public:
     int parse(const std::string& f);
     void scan_begin();
     void scan_end();
+
+    void accept(explain::AST::Consumer& consumer);
 };
 
 #endif //EXPLAIN_DRIVER_HH
