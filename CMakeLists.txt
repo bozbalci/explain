@@ -46,7 +46,7 @@ include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 # Get required LLVM libraries
-llvm_map_components_to_libnames(LLVM_LIBS core mcjit native support)
+llvm_map_components_to_libnames(LLVM_LIBS core mcjit all support)
 
 set(CMAKE_CXX_STANDARD 14)
 

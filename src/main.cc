@@ -34,7 +34,7 @@ main(int argc, char *argv[])
             // drv.root->accept(pp);
             drv.root->accept(cg);
 
-            cg.printModule();
+            cg.emitObject();
         }
         else
         {

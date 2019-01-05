@@ -18,7 +18,7 @@ namespace explain {
 ///
 ///    1.) Every AST node except for ones which are optional (e.g. `else` block of an if-then-else) holds a non-null
 ///        pointer value.
-///    2.) Every usage of the identifier "main" inside function declarations and function calls is mangled.
+///    2.) Every usage of the identifier "xpln-main" inside function declarations and function calls is mangled.
 ///    3.) A `FuncDecl` node for the top-level statements have been created and inserted to the root node.
 ///    4.) Every `FuncDecl` node has at least one `ReturnStmt` within their body.
 ///    5.) Every node following a `ReturnStmt` inside `BlockStmt` nodes is pruned.
@@ -28,7 +28,7 @@ class Canonicalizer : public AST::Consumer
 {
     MessageIssuer *mi;
 
-    std::string mangledMain = "main-mangled";
+    std::string mangledMain = "xpln-main-mangled";
     bool encounteredReturnStmt;
 public:
     explicit Canonicalizer(MessageIssuer *mi)

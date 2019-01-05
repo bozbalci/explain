@@ -8,17 +8,31 @@ namespace explain {
 CodeGenerator::CodeGenerator(MessageIssuer *mi)
     : mi(mi), Builder(llvm::IRBuilder<>(Context)), V(nullptr)
 {
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmPrinter();
-    llvm::InitializeNativeTargetAsmParser();
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllAsmParsers();
+    llvm::InitializeAllAsmPrinters();
 
-    // llvm::TargetMachine *TM = llvm::EngineBuilder().selectTarget();
+    std::string Error;
+    auto TargetTriple = llvm::sys::getDefaultTargetTriple();
+    auto Target = llvm::TargetRegistry::lookupTarget(TargetTriple, Error);
+
+    if (!Target)
+        mi->fatal_error(Error);
+
+    auto CPU = "generic";
+    auto Features = "";
+
+    llvm::TargetOptions opt;
+    auto RM = llvm::Optional<llvm::Reloc::Model>();
+    TargetMachine = Target->createTargetMachine(TargetTriple, CPU, Features, opt, RM);
 
     Module = std::make_unique<llvm::Module>("explain", Context);
-    // Module->setDataLayout(TM->createDataLayout());
+    Module->setDataLayout(TargetMachine->createDataLayout());
+    Module->setTargetTriple(TargetTriple);
 
     FPM = std::make_unique<llvm::legacy::FunctionPassManager>(Module.get());
-
     // Promote `Alloca`s to registers (mem2reg).
     FPM->add(llvm::createPromoteMemoryToRegisterPass());
     // Peephole optimizations and bit-twiddling optzns. (Cool abbreviation, huh?)
@@ -31,6 +45,24 @@ CodeGenerator::CodeGenerator(MessageIssuer *mi)
     FPM->add(llvm::createCFGSimplificationPass());
 
     FPM->doInitialization();
+}
+
+void CodeGenerator::emitObject()
+{
+    auto Filename = "output.o";
+    std::error_code EC;
+    llvm::raw_fd_ostream dest(Filename, EC, llvm::sys::fs::F_None);
+
+    if (EC)
+        mi->fatal_error("could not open file: " + EC.message());
+
+    llvm::legacy::PassManager pass;
+    auto FileType = llvm::TargetMachine::CGFT_ObjectFile;
+    if (TargetMachine->addPassesToEmitFile(pass, dest, nullptr, FileType))
+        mi->fatal_error("TargetMachine can't emit a file of this type");
+
+    pass.run(*Module);
+    dest.flush();
 }
 
 void
@@ -451,6 +483,5 @@ CodeGenerator::visit(AST::CondCompOp *cond)
 
     V = Builder.CreateUIToFP(UIResult, llvm::Type::getDoubleTy(Context), "fp");
 }
-
 
 } // end namespace explain

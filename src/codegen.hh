@@ -13,6 +13,7 @@
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/TargetRegistry.h>
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Transforms/InstCombine/InstCombine.h>
 #include <llvm/Transforms/Scalar.h>
@@ -33,6 +34,8 @@ class CodeGenerator : public AST::Consumer
     std::unique_ptr<llvm::Module> Module;
     std::unique_ptr<llvm::legacy::FunctionPassManager> FPM;
 
+    llvm::TargetMachine *TargetMachine;
+
     std::map<std::string, llvm::AllocaInst *> Locals;
 
     // The most recently generated LLVM value
@@ -44,7 +47,7 @@ class CodeGenerator : public AST::Consumer
     llvm::AllocaInst *EmitEntryBlockAlloca(const std::string& VarName);
 public:
     explicit CodeGenerator(MessageIssuer *mi);
-
+    void emitObject();
     void printModule();
 
     void visit(AST::Root *root) override;

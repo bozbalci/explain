@@ -12,7 +12,7 @@ Canonicalizer::visit(AST::Root *root)
     // for XPLN programs.
     auto mainFuncBody = std::make_unique<AST::BlockStmt>(std::move(root->topLevelStmts));
     auto mainFuncArgs = std::make_unique<AST::FuncDeclArgs>();
-    auto mainFuncDecl = std::make_unique<AST::FuncDecl>("main", std::move(mainFuncArgs), std::move(mainFuncBody));
+    auto mainFuncDecl = std::make_unique<AST::FuncDecl>("xpln-main", std::move(mainFuncArgs), std::move(mainFuncBody));
     mainFuncDecl->isXplnEntry = true;
     root->funcDecls.push_back(std::move(mainFuncDecl));
 
@@ -229,7 +229,7 @@ Canonicalizer::visit(AST::ExprNumber *expr)
 void
 Canonicalizer::visit(AST::ExprFuncCall *expr)
 {
-    if (expr->ident == "main")
+    if (expr->ident == "xpln-main")
         expr->ident = mangledMain;
 
     if (!expr->args)
