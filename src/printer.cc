@@ -124,6 +124,8 @@ PrettyPrinter::visit(explain::AST::FuncDecl *decl)
         decl->body->accept(*this);
         dedent();
     }
+
+    std::cout << std::endl;
 }
 
 void

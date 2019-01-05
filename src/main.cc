@@ -27,13 +27,14 @@ main(int argc, char *argv[])
         {
             explain::MessageIssuer mi;
             explain::Canonicalizer cn(&mi);
-            // explain::PrettyPrinter pp(&mi);
+            explain::PrettyPrinter pp(&mi);
             explain::CodeGenerator cg(&mi);
 
             drv.root->accept(cn);
             // drv.root->accept(pp);
             drv.root->accept(cg);
 
+            cg.printModule();
             cg.emitObject();
         }
         else

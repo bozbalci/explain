@@ -1,0 +1,5 @@
+fun convert(fahr)
+    return (fahr - 32) * 5 / 9;
+endf;
+
+return 0;
