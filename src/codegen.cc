@@ -91,6 +91,15 @@ CodeGenerator::visit(AST::Root *root)
 {
     for (auto& f : root->funcDecls)
         f->accept(*this);
+
+    std::string str;
+    llvm::raw_string_ostream OS(str);
+    if (llvm::verifyModule(*Module, &OS))
+    {
+        OS.flush();
+        mi->error("llvm::verifyModule failed: " + str);
+        return;
+    }
 }
 
 void
@@ -198,7 +207,7 @@ CodeGenerator::visit(AST::IfStmt *stmt)
     if (!Cond)
         return;
 
-    llvm::Value *NeqZero = Builder.CreateFCmpONE(Cond, llvm::ConstantFP::get(Context, llvm::APFloat(0.0)), "if");
+    llvm::Value *NeqZero = Builder.CreateFCmpONE(Cond, llvm::ConstantFP::get(Context, llvm::APFloat(0.0)));
 
     llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(Context, "then", currentFunction);
     llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(Context, "else", currentFunction);
@@ -248,7 +257,7 @@ CodeGenerator::visit(AST::WhileStmt *stmt)
     stmt->cond->accept(*this);
     llvm::Value *Cond = V;
 
-    llvm::Value *NeqZero = Builder.CreateFCmpONE(Cond, llvm::ConstantFP::get(Context, llvm::APFloat(0.0)), "while");
+    llvm::Value *NeqZero = Builder.CreateFCmpONE(Cond, llvm::ConstantFP::get(Context, llvm::APFloat(0.0)));
     Builder.CreateCondBr(NeqZero, LoopBB, PostBB);
 
     Builder.SetInsertPoint(LoopBB);
@@ -305,16 +314,16 @@ CodeGenerator::visit(AST::ExprBinOp *expr)
     switch (expr->op)
     {
         case AST::Operator::PLUS:
-            V = Builder.CreateFAdd(Left, Right, "add");
+            V = Builder.CreateFAdd(Left, Right);
             break;
         case AST::Operator::MINUS:
-            V = Builder.CreateFSub(Left, Right, "sub");
+            V = Builder.CreateFSub(Left, Right);
             break;
         case AST::Operator::TIMES:
-            V = Builder.CreateFMul(Left, Right, "mul");
+            V = Builder.CreateFMul(Left, Right);
             break;
         case AST::Operator::DIV:
-            V = Builder.CreateFDiv(Left, Right, "div");
+            V = Builder.CreateFDiv(Left, Right);
             break;
         default:
             return;
@@ -382,7 +391,7 @@ CodeGenerator::visit(AST::ExprFuncCall *expr)
         Args.push_back(V);
     }
 
-    V = Builder.CreateCall(Func, Args, "call");
+    V = Builder.CreateCall(Func, Args);
 }
 
 void
@@ -399,7 +408,7 @@ CodeGenerator::visit(AST::CondUnOp *cond)
     if (!Operand)
         return;
 
-    llvm::Value *OperandInt = Builder.CreateFPToUI(Operand, llvm::Type::getInt1Ty(Context), "ui");
+    llvm::Value *OperandInt = Builder.CreateFPToUI(Operand, llvm::Type::getInt1Ty(Context));
     llvm::Value *UIResult = nullptr;
 
     switch (cond->op)
@@ -412,7 +421,7 @@ CodeGenerator::visit(AST::CondUnOp *cond)
             return;
     }
 
-    V = Builder.CreateUIToFP(UIResult, llvm::Type::getDoubleTy(Context), "fp");
+    V = Builder.CreateUIToFP(UIResult, llvm::Type::getDoubleTy(Context));
 }
 
 void
@@ -428,23 +437,23 @@ CodeGenerator::visit(AST::CondBinOp *cond)
     if (!Right)
         return;
 
-    llvm::Value *LeftInt = Builder.CreateFPToUI(Left, llvm::Type::getInt1Ty(Context), "ui");
-    llvm::Value *RightInt = Builder.CreateFPToUI(Right, llvm::Type::getInt1Ty(Context), "ui");
+    llvm::Value *LeftInt = Builder.CreateFPToUI(Left, llvm::Type::getInt1Ty(Context));
+    llvm::Value *RightInt = Builder.CreateFPToUI(Right, llvm::Type::getInt1Ty(Context));
     llvm::Value *UIResult = nullptr;
 
     switch (cond->op)
     {
         case AST::Operator::AND:
-            UIResult = Builder.CreateAnd(LeftInt, RightInt, "and");
+            UIResult = Builder.CreateAnd(LeftInt, RightInt);
             break;
         case AST::Operator::OR:
-            UIResult = Builder.CreateOr(LeftInt, RightInt, "or");
+            UIResult = Builder.CreateOr(LeftInt, RightInt);
             break;
         default:
             return;
     }
 
-    V = Builder.CreateUIToFP(UIResult, llvm::Type::getDoubleTy(Context), "fp");
+    V = Builder.CreateUIToFP(UIResult, llvm::Type::getDoubleTy(Context));
 }
 
 void
@@ -465,25 +474,25 @@ CodeGenerator::visit(AST::CondCompOp *cond)
     switch (cond->op)
     {
         case AST::Operator::LT:
-            UIResult = Builder.CreateFCmpOLT(Left, Right, "lt");
+            UIResult = Builder.CreateFCmpOLT(Left, Right);
             break;
         case AST::Operator::LTEQ:
-            UIResult = Builder.CreateFCmpOLE(Left, Right, "le");
+            UIResult = Builder.CreateFCmpOLE(Left, Right);
             break;
         case AST::Operator::EQ:
-            UIResult = Builder.CreateFCmpOEQ(Left, Right, "eq");
+            UIResult = Builder.CreateFCmpOEQ(Left, Right);
             break;
         case AST::Operator::GTEQ:
-            UIResult = Builder.CreateFCmpOGE(Left, Right, "ge");
+            UIResult = Builder.CreateFCmpOGE(Left, Right);
             break;
         case AST::Operator::GT:
-            UIResult = Builder.CreateFCmpOGT(Left, Right, "gt");
+            UIResult = Builder.CreateFCmpOGT(Left, Right);
             break;
         default:
             return;
     }
 
-    V = Builder.CreateUIToFP(UIResult, llvm::Type::getDoubleTy(Context), "fp");
+    V = Builder.CreateUIToFP(UIResult, llvm::Type::getDoubleTy(Context));
 }
 
 } // end namespace explain
