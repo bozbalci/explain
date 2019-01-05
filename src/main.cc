@@ -35,7 +35,7 @@ main(int argc, char *argv[])
     ssel.add_options()
             ("emit-ast", "emit AST in pretty-printed form")
             ("emit-llvm", "emit LLVM representation only")
-            (",c", "generate object file")
+            ("emit-obj,c", "generate object file")
             ;
 
     opts.add(debug).add(ssel);
@@ -124,7 +124,7 @@ main(int argc, char *argv[])
     }
 
 
-    if (vm.count("c"))
+    if (vm.count("emit-obj"))
     {
         codeGenerator.emitObject(outputFileName);
         std::exit(EXIT_SUCCESS);

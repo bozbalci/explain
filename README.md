@@ -6,9 +6,18 @@ explain is an _industrial grade_ compiler for [XPLN]. It is built using `flex`, 
 
 ## Features
 
-* Reasonably powerful error reporting
-* Optimizations! (examples below)
-* Targets X86, X86-64, PowerPC, PowerPC-64, ARM, MIPS and many more architectures
+* Error reporting
+* Optimizations
+* Pretty-printer for the abstract syntax tree
+* Emitting LLVM intermediate representation
+* Native code generation for X86, X86-64, PowerPC, PowerPC-64, ARM, MIPS and many more architectures
+
+## Planned features
+
+* Source locations in the AST for better error reporting
+* Support for the DWARF debugging standard
+* More aggressive optimizations including function inlining
+* Just-in-time compilation and interpreter support
 
 ## Requirements
 
@@ -23,149 +32,162 @@ The project was built using the following tooling, earlier versions are not test
 
 ## Build
 
-    mkdir build
-    cd build
-    cmake ..
-    make
+    $ mkdir build
+    $ cd build
+    $ cmake .. && make
 
 On macOS, the CMake script will issue a warning about the installed Bison version. Make sure that Bison 3.2 (or greater)
 is used when building this project.
 
-## Example usage
+## Usage
 
-Write a valid XPLN program into a file, say `convert.xpln`:
+After compiling, install `explain` somewhere in your path. To see all available options, invoke `explain` with `--help`.
+
+    $ explain --help
+    explain, the industrial grade XPLN compiler
+
+    General options:
+      -h [ --help ]          print this help message and exit
+      -v [ --version ]       print version and exit
+      -i [ --input ] arg     input file
+      -o [ --output ] arg    output file
+    
+    Debugging options:
+      --trace-scan           run scanner in debug mode
+      --trace-parse          run parser in debug mode
+    
+    Stage selection options:
+      --emit-ast             emit AST in pretty-printed form
+      --emit-llvm            emit LLVM representation only
+      -c                     generate object file
+    
+    If no stage selection option is specified, then every stage will be run and
+    the linker is run to produce an executable.
+
+## Example
+
+### convert.xpln: Convert °F to °C
+
+This example is located at `examples/convert.xpln`.
 
     fun convert(fahr)
         return (fahr - 32) * 5 / 9;
     endf;
     
-    return 0;
+    while 1 > 0
+        input fahr;
+        result := convert(fahr);
+        output result;
+    endw;
     
-Compile with `explain`:
+    return 0;
 
-    $ explain convert.xpln -o convert.o
+Compile with `explain` and run:
 
-Write a driver program in C or C++:
+    $ explain convert.xpln -o convert
+    $ ./convert
+    100
+    37.777778
+    ^C
 
+If you would like to link to a separate C/C++ program, invoke `explain` with `-c` to emit an object file. Note that the
+top-level function is named `xpln_main` and a function defined with the name `main` in XPLN programs is mangled (their
+new name would be `xpln_mangled_main`.)
+
+    $ explain convert.xpln -o convert.o -c
+    $ cat > driver.c
     #include <stdio.h>
     
     extern double convert(double);
-    
-    int
-    main(int argc, char **argv)
+
+    int main(int argc, char **argv)
     {
-        printf("100.0 fahr = %.2lf celcius\n", convert(100.0));
+        printf("100 F is approx. %.2lf C\n", convert(100.0));
+
         return 0;
     }
-    
-Compile, link and run:
+    ^D
+    $ cc -o driver driver.c convert.o 
+    $ ./driver
+    100 F is approx. 37.78 C
 
-    $ clang -o main main.c convert.o
-    $ ./main
-    100 fahr = 37.78 celc
+If you would like to emit LLVM code, you can do so by using `--emit-llvm`. You can then use this file with other
+programs in the LLVM toolchain (`llc`, `opt`, `llvm-as`, etc.) for fun and profit.
 
-    
-## Miscellaneous features
-
-### LLVM IR Emitter
-
-You can emit LLVM code by invoking `explain` with `--emit-llvm`.
-
-    $ explain examples/fibonacci.xpln --emit-llvm -o fibonacci.ll
-
-This emits something like the following:
-
-    ; ModuleID = 'fibonacci.ll'
-    source_filename = "explain"
+    $ explain convert.xpln -o convert.ll --emit-llvm
+    $ cat convert.ll
+    ; ModuleID = 'convert.xpln'
+    source_filename = "convert.xpln"
     target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
     target triple = "x86_64-apple-darwin18.0.0"
     
-    define double @fib(double %n) {
+    @ifmt = internal constant [4 x i8] c"%lf\00"
+    @ofmt = internal constant [5 x i8] c"%lf\0A\00"
+    
+    declare i32 @scanf(i8*, ...)
+    
+    declare i32 @printf(i8*, ...)
+    
+    define double @convert(double %fahr) {
     entry:
-      %eq = fcmp oeq double %n, 0.000000e+00
-      %eq4 = fcmp oeq double %n, 1.000000e+00
-      %or = or i1 %eq, %eq4
-      br i1 %or, label %then, label %else
-    
-    then:                                             ; preds = %entry
-      ret double 1.000000e+00
-    
-    else:                                             ; preds = %entry
-      %sub = fadd double %n, -1.000000e+00
-      %call = call double @fib(double %sub)
-      %sub10 = fadd double %n, -2.000000e+00
-      %call11 = call double @fib(double %sub10)
-      %add = fadd double %call, %call11
-      ret double %add
+      %0 = fadd double %fahr, -3.200000e+01
+      %1 = fmul double %0, 5.000000e+00
+      %2 = fdiv double %1, 9.000000e+00
+      ret double %2
     }
     
-    define double @xpln-main() {
+    define double @xpln_main() {
     entry:
-      %call = call double @fib(double 1.000000e+01)
-      ret double %call
-    }
-
-
-### AST Pretty Printer
-
-You can obtain a pretty-printed form of the Abstract Syntax Tree (AST) by invoking `explain` with the `--pretty-ast`
-flag.
-
-    $ explain --pretty-ast -
-    fun foo(a,b) return a + b; endf;
-    if foo(10, 20) >= 30 return 0; else return 1; endi;
-    ^D
-    fun foo
-      args
-        arg a
-        arg b
-      return
-        +
-          a
-          b
+      %fahr = alloca double, align 8
+      br label %cond
     
-    fun xpln-main
+    cond:                                             ; preds = %cond, %entry
+      %0 = call i32 (i8*, ...) @scanf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @ifmt, i64 0, i64 0), double* nonnull %fahr)
+      %fahr1 = load double, double* %fahr, align 8
+      %1 = call double @convert(double %fahr1)
+      %2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @ofmt, i64 0, i64 0), double %1)
+      br label %cond
+    }
+ 
+To obtain a pretty-printed form of the abstract syntax tree after some basic manipulations, invoke `explain` with the
+`--emit-ast` flag.
+
+    $ explain examples/fibonacci.xpln -o fibonacci.ast --emit-ast
+    $ cat fibonacci.ast
+    fun fib
       args
+        arg n
       if
-        >=
-          call foo
-            args
-              arg
-                10
-              arg
-                20
-          30
+        or
+          ==
+            n
+            0
+          ==
+            n
+            1
       then
         return
-          0
+          1
       else
         return
-          1
-
-## How it works
-
-`explain` is organized into a few simple phases.
-
-1. Scanning and parsing the source: the `Driver` class encapsulates the scanner and the parser generated by `flex` and
-`bison`. Its output is an instance of `AST::Root`.
-2. AST canonicalization: a single pass on the AST is required to perform some program manipulations and verifications.
-These are:
-    1. Verifying that the AST is constructed successfully (no malformed nodes)
-    2. Name mangling to prevent linking conflicts with C programs
-    3. Organizing the top level statements into a special XPLN function
-    4. Verifying that every function has at least one return statement in their body
-    5. Pruning statements after a `return` statement in block statements
-3. Code generation: this phase builds the LLVM IR and validates variable usages and function calls. In this phase, the
-LLVM optimization passes are performed as each function is built. These optimizations are:
-    1. Promoting memory references to register references
-    2. Combining instructions into fewer, simpler instructions
-    3. Reassociating commutative expressions for better constant propagation
-    4. Eliminating common subexpressions using value numbering
-    5. Control flow graph simplification by merging basic blocks, dead code elimination, etc.
-4. Compiling: in this step, `explain` takes the LLVM module created in Phase III and compiles it to the target machine
-architecture. An object file is created.
-
-
-## Possible features?
-
-* Even better error reporting by holding source locations in the AST
+          +
+            call fib
+              args
+                arg
+                  -
+                    n
+                    1
+            call fib
+              args
+                arg
+                  -
+                    n
+                    2
+    
+    fun xpln_main
+      args
+      return
+        call fib
+          args
+            arg
+              10

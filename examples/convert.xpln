@@ -2,4 +2,10 @@ fun convert(fahr)
     return (fahr - 32) * 5 / 9;
 endf;
 
+while 1 > 0
+    input fahr;
+    result := convert(fahr);
+    output result;
+endw;
+
 return 0;
