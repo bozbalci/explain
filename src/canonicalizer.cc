@@ -229,7 +229,7 @@ Canonicalizer::visit(AST::ExprNumber *expr)
 void
 Canonicalizer::visit(AST::ExprFuncCall *expr)
 {
-    if (expr->ident == "xpln-main")
+    if (expr->ident == "main")
         expr->ident = mangledMain;
 
     if (!expr->args)

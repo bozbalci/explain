@@ -28,7 +28,7 @@ class Canonicalizer : public AST::Consumer
 {
     MessageIssuer *mi;
 
-    std::string mangledMain = "xpln-main-mangled";
+    std::string mangledMain = "xpln-mangled-main";
     bool encounteredReturnStmt;
 public:
     explicit Canonicalizer(MessageIssuer *mi)
