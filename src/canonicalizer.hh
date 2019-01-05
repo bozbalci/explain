@@ -4,6 +4,7 @@
 #include <string>
 
 #include "ast.hh"
+#include "messages.hh"
 
 namespace explain {
 
@@ -25,14 +26,13 @@ namespace explain {
 ///
 class Canonicalizer : public AST::Consumer
 {
-    std::string mangledMain;
-    int errorCount;
-    bool encounteredReturnStmt;
+    MessageIssuer *mi;
 
-    void reportError(std::string msg);
+    std::string mangledMain = "main-mangled";
+    bool encounteredReturnStmt;
 public:
-    Canonicalizer()
-        : errorCount(0), mangledMain("main-mangled"), encounteredReturnStmt(false) {}
+    explicit Canonicalizer(MessageIssuer *mi)
+        : mi(mi), encounteredReturnStmt(false) {}
 
     void visit(AST::Root *root) override;
     void visit(AST::BlockStmt *block) override;

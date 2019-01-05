@@ -1,9 +1,11 @@
 #include <iostream>
 #include <utility>
 
-#include "driver.hh"
 #include "canonicalizer.hh"
+#include "driver.hh"
+#include "messages.hh"
 #include "printer.hh"
+#include "codegen.hh"
 
 int
 main(int argc, char *argv[])
@@ -23,23 +25,16 @@ main(int argc, char *argv[])
         }
         else if (!drv.parse(argv[i]))
         {
-            explain::Canonicalizer c;
-            explain::PrettyPrinter p;
+            explain::MessageIssuer mi;
+            explain::Canonicalizer cn(&mi);
+            // explain::PrettyPrinter pp(&mi);
+            explain::CodeGenerator cg(&mi);
 
-            drv.root->accept(c);
-            drv.root->accept(p);
+            drv.root->accept(cn);
+            // drv.root->accept(pp);
+            drv.root->accept(cg);
 
-            /*explain::CodeGen::Context ctx;
-            ctx.initialize();
-
-            ctx.codegen(std::move(drv.root));
-
-            std::string Str;
-            llvm::raw_string_ostream OS(Str);
-            OS << *ctx.TheModule;
-            OS.flush();
-
-            std::cout << Str << std::endl;*/
+            cg.printModule();
         }
         else
         {

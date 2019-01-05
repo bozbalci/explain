@@ -26,21 +26,21 @@ message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION} at: ${LLVM_DIR}")
 
 # Set up sources and headers
 set(SOURCE_COMMON
-        src/driver.cc
-        src/parser.yy
-        src/scanner.ll
-        src/main.cc
-#        src/codegen.cc
-        src/printer.cc
         src/canonicalizer.cc
-        )
+        src/codegen.cc
+        src/driver.cc
+        src/main.cc
+        src/parser.yy
+        src/printer.cc
+        src/scanner.ll)
 
 set(HEADER_COMMON
         src/ast.hh
+        src/canonicalizer.hh
+        src/codegen.hh
         src/driver.hh
-#        src/codegen.hh
-        src/printer.hh
-        src/canonicalizer.hh)
+        src/messages.hh
+        src/printer.hh)
 
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})

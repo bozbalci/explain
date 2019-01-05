@@ -1,475 +1,456 @@
-#include <iostream>
-
-#include <llvm/ExecutionEngine/ExecutionEngine.h>
-#include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/LLVMContext.h>
-#include <llvm/IR/Module.h>
-#include <llvm/IR/Value.h>
-#include <llvm/IR/Verifier.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/Target/TargetMachine.h>
-#include <llvm/Transforms/InstCombine/InstCombine.h>
-#include <llvm/Transforms/Scalar.h>
-#include <llvm/Transforms/Scalar/GVN.h>
-#include <llvm/Transforms/Utils.h>
-
-#include "ast.hh"
 #include "codegen.hh"
+
+#include <sstream>
+#include <vector>
 
 namespace explain {
 
-namespace CodeGen {
-
-void
-Context::initialize()
+CodeGenerator::CodeGenerator(MessageIssuer *mi)
+    : mi(mi), Builder(llvm::IRBuilder<>(Context)), V(nullptr)
 {
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
 
-    llvm::TargetMachine *TM = llvm::EngineBuilder().selectTarget();
+    // llvm::TargetMachine *TM = llvm::EngineBuilder().selectTarget();
 
-    TheModule = std::make_unique<llvm::Module>("explain", TheContext);
-    TheModule->setDataLayout(TM->createDataLayout());
+    Module = std::make_unique<llvm::Module>("explain", Context);
+    // Module->setDataLayout(TM->createDataLayout());
 
-    TheFPM = std::make_unique<llvm::legacy::FunctionPassManager>(TheModule.get());
+    FPM = std::make_unique<llvm::legacy::FunctionPassManager>(Module.get());
 
     // Promote `Alloca`s to registers (mem2reg).
-    TheFPM->add(llvm::createPromoteMemoryToRegisterPass());
+    FPM->add(llvm::createPromoteMemoryToRegisterPass());
     // Peephole optimizations and bit-twiddling optzns. (Cool abbreviation, huh?)
-    TheFPM->add(llvm::createInstructionCombiningPass());
+    FPM->add(llvm::createInstructionCombiningPass());
     // Re-associate expressions.
-    TheFPM->add(llvm::createReassociatePass());
+    FPM->add(llvm::createReassociatePass());
     // Eliminate common subexpressions.
-    TheFPM->add(llvm::createGVNPass());
+    FPM->add(llvm::createGVNPass());
     // Simplify control flow graph (delete unreachable blocks, etc).
-    TheFPM->add(llvm::createCFGSimplificationPass());
+    FPM->add(llvm::createCFGSimplificationPass());
 
-    TheFPM->doInitialization();
+    FPM->doInitialization();
 }
 
 void
-Context::codegen(std::unique_ptr<AST::Root> root)
+CodeGenerator::printModule()
 {
-    for (auto& f : root->funcDecls)
-        f->codegen(*this);
-
-    // Handle top level statements by creating a dangling AST::FuncDecl node, and creating code for it after code has
-    // been generated for all other functions.
-    auto mainBody = std::make_unique<AST::BlockStmt>(std::move(root->topLevelStmts));
-    auto args = std::make_unique<AST::FuncDeclArgs>();
-    auto mainFuncDecl = std::make_unique<AST::FuncDecl>("main", std::move(args), std::move(mainBody));
-
-    mainFuncDecl->codegen(*this);
-
-    // Can perform module-level passes in here
-}
-
-llvm::Function *
-Context::GetCurrentFunction()
-{
-    llvm::Function *F = TheModule->getFunction(ScopeName);
-
-    if (!F)
-        LogErrorV("fatal error: cannot determine scope");
-
-    return F;
+    std::string str;
+    llvm::raw_string_ostream OS(str);
+    OS << *Module;
+    OS.flush();
+    std::cout << str;
 }
 
 llvm::AllocaInst *
-Context::EmitEntryBlockAlloca(llvm::Function *TheFunction, std::string VarName)
+CodeGenerator::EmitEntryBlockAlloca(const std::string &VarName)
 {
-    llvm::IRBuilder<> TmpB(&TheFunction->getEntryBlock(),
-            TheFunction->getEntryBlock().begin());
+    llvm::IRBuilder<> TmpBuilder(&currentFunction->getEntryBlock(),
+            currentFunction->getEntryBlock().begin());
 
-    return TmpB.CreateAlloca(llvm::Type::getDoubleTy(TheContext), nullptr, VarName);
+    return TmpBuilder.CreateAlloca(llvm::Type::getDoubleTy(Context), nullptr, VarName);
 }
 
-llvm::Value *
-Context::LogErrorV(std::string str) {
-    std::cerr << str << std::endl;
-    return nullptr;
+void
+CodeGenerator::visit(AST::Root *root)
+{
+    for (auto& f : root->funcDecls)
+        f->accept(*this);
 }
 
-} // end namespace CodeGen
-
-llvm::Function *
-AST::FuncDecl::codegen(CodeGen::Context &ctx)
+void
+CodeGenerator::visit(AST::BlockStmt *block)
 {
-    std::vector<std::string> ArgNames = args->idents;
+    for (auto& s : block->stmts)
+        s->accept(*this);
+}
 
-    // Required for making the function type (an N-tuple of `double`s).
-    std::vector<llvm::Type *> Doubles(ArgNames.size(), llvm::Type::getDoubleTy(ctx.TheContext));
-    llvm::FunctionType *FT = llvm::FunctionType::get(llvm::Type::getDoubleTy(ctx.TheContext), Doubles,
+void
+CodeGenerator::visit(AST::FuncDeclArgs *args)
+{
+    ;
+}
+
+void CodeGenerator::visit(AST::FuncCallArgs *args)
+{
+    ;
+}
+
+void
+CodeGenerator::visit(AST::Entry *entry)
+{
+    ;
+}
+
+void
+CodeGenerator::visit(AST::Stmt *stmt)
+{
+    ;
+}
+
+void
+CodeGenerator::visit(AST::FuncDecl *decl)
+{
+    std::string FuncName = decl->ident;
+    std::vector<std::string> ArgNames = decl->args->idents;
+    std::vector<llvm::Type *> ArgTypes(ArgNames.size(), llvm::Type::getDoubleTy(Context));
+    llvm::FunctionType *FT = llvm::FunctionType::get(llvm::Type::getDoubleTy(Context), ArgTypes,
             /* isVarArg = */ false);
+    llvm::Function *F = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, FuncName, Module.get());
+    currentFunction = F;
 
-    llvm::Function *F = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, ident, ctx.TheModule.get());
-
-    // We need to make the context aware of the current function for which code is currently being generated.
-    ctx.ScopeName = ident;
-
-    // Set names for all arguments.
-    unsigned Idx = 0;
+    unsigned i = 0;
     for (auto& Arg : F->args())
-        Arg.setName(ArgNames[Idx++]);
+        Arg.setName(ArgNames[i++]);
 
-    llvm::BasicBlock *BB = llvm::BasicBlock::Create(ctx.TheContext, "entry", F);
-    ctx.Builder.SetInsertPoint(BB);
-    ctx.currentBlock = BB;
+    llvm::BasicBlock *EntryBB = llvm::BasicBlock::Create(Context, "entry", F);
+    Builder.SetInsertPoint(EntryBB);
+    currentBasicBlock = EntryBB;
 
-    // Set up local variables, install arguments into local scope.
-    ctx.LocalVars.clear();
+    // Install function arguments to `Locals`
+    Locals.clear();
     for (auto& Arg : F->args())
     {
-        llvm::AllocaInst *Alloca = ctx.EmitEntryBlockAlloca(F, Arg.getName());
-        ctx.Builder.CreateStore(&Arg, Alloca);
-        ctx.LocalVars[Arg.getName()] = Alloca;
+        llvm::AllocaInst *Alloca = EmitEntryBlockAlloca(Arg.getName());
+        Builder.CreateStore(&Arg, Alloca);
+        Locals[Arg.getName()] = Alloca;
     }
 
-    // Generate code for the function body.
-    for (auto& stmt : body->stmts)
-    {
-        llvm::Value *V = stmt->codegen(ctx);
+    decl->body->accept(*this);
 
-        if (!V)
-        {
-            // Error reading body, remove this function.
-            F->eraseFromParent();
-            return nullptr;
-        }
-    }
-
-    std::string Str;
-    llvm::raw_string_ostream OS(Str);
+    std::string str;
+    llvm::raw_string_ostream OS(str);
     if (llvm::verifyFunction(*F, &OS))
     {
         OS.flush();
-        std::cerr << "==LLVM== Verification of function '" << ident << "' failed: " << Str;
+        mi->error("llvm::verifyFunction failed for function " + FuncName + ": " + str);
+        F->eraseFromParent();
+
+        return;
     }
 
-    // TODO Do not run optimization passes because they cause all kinds of terror when the LLVM verification fails!
-    //  ctx.TheFPM->run(*F);
-    return F;
+    FPM->run(*F);
 }
 
-llvm::Value *
-AST::AssignmentStmt::codegen(CodeGen::Context &ctx)
+void
+CodeGenerator::visit(AST::AssignmentStmt *stmt)
 {
-    llvm::Function *F = ctx.GetCurrentFunction();
-    if (!F)
-        return nullptr;
+    std::string VarName = stmt->ident;
 
-    llvm::Value *Value = expr->codegen(ctx);
-    if (!Value)
-        return nullptr;
+    stmt->expr->accept(*this);
+    llvm::Value *AssignedValue = V;
+    if (!AssignedValue)
+        return;
 
-    llvm::Value *Variable = ctx.LocalVars[ident];
+    llvm::Value *Variable = Locals[VarName];
     if (!Variable)
     {
-        // No AllocaInst exists in the corrent scope for the given identifier, so this is a first time assignment.
-        llvm::AllocaInst *Alloca = ctx.EmitEntryBlockAlloca(F, ident);
-        ctx.Builder.CreateStore(Value, Alloca);
-
-        // Remember this binding.
-        ctx.LocalVars[ident] = Alloca;
+        llvm::AllocaInst *Alloca = EmitEntryBlockAlloca(VarName);
+        Builder.CreateStore(AssignedValue, Alloca);
+        Locals[VarName] = Alloca;
     }
     else
     {
-        ctx.Builder.CreateStore(Value, Variable);
+        Builder.CreateStore(AssignedValue, Variable);
     }
-
-    // Return value is never used since assignment in XPLN is a statement (and not an expression).
-    return Value;
 }
 
-llvm::Value *
-AST::IfStmt::codegen(CodeGen::Context &ctx)
+void
+CodeGenerator::visit(AST::IfStmt *stmt)
 {
-    llvm::Value *CondV = cond->codegen(ctx);
-    if (!CondV)
-        return nullptr;
+    stmt->cond->accept(*this);
+    llvm::Value *Cond = V;
+    if (!Cond)
+        return;
 
-    // Convert condition to a boolean value by compering non-equality to 0.0.
-    llvm::Value *BoolV = ctx.Builder.CreateFCmpONE(CondV,
-        llvm::ConstantFP::get(ctx.TheContext, llvm::APFloat(0.0)), "ifcond");
+    llvm::Value *NeqZero = Builder.CreateFCmpONE(Cond, llvm::ConstantFP::get(Context, llvm::APFloat(0.0)), "if");
 
-    llvm::Function *F = ctx.Builder.GetInsertBlock()->getParent();
+    llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(Context, "then", currentFunction);
+    llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(Context, "else", currentFunction);
+    llvm::BasicBlock *MergeBB = nullptr;
 
-    llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(ctx.TheContext, "then", F);
-    llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(ctx.TheContext, "else", F);
-    llvm::BasicBlock *MergeBB = llvm::BasicBlock::Create(ctx.TheContext, "merge", F);
+    Builder.CreateCondBr(NeqZero, ThenBB, ElseBB);
 
-    ctx.Builder.CreateCondBr(BoolV, ThenBB, ElseBB);
-
-    // Emit code for the "then" block.
-    ctx.Builder.SetInsertPoint(ThenBB);
-    ctx.currentBlock = ThenBB;
-    for (auto& Stmt : then->stmts)
+    Builder.SetInsertPoint(ThenBB);
+    currentBasicBlock = ThenBB;
+    stmt->then->accept(*this);
+    if (!currentBasicBlock->getTerminator())
     {
-        llvm::Value *V =  Stmt->codegen(ctx);
+        MergeBB = llvm::BasicBlock::Create(Context, "merge", currentFunction);
+        Builder.CreateBr(MergeBB);
+    }
+
+    Builder.SetInsertPoint(ElseBB);
+    currentBasicBlock = ElseBB;
+    if (stmt->otherwise)
+        stmt->otherwise->accept(*this);
+    if (!currentBasicBlock->getTerminator())
+    {
+        if (!MergeBB)
+            MergeBB = llvm::BasicBlock::Create(Context, "merge", currentFunction);
+        Builder.CreateBr(MergeBB);
+    }
+
+    if (MergeBB)
+    {
+        Builder.SetInsertPoint(MergeBB);
+        currentBasicBlock = MergeBB;
+    }
+}
+
+void
+CodeGenerator::visit(AST::WhileStmt *stmt)
+{
+    llvm::BasicBlock *CondBB = llvm::BasicBlock::Create(Context, "cond", currentFunction);
+    llvm::BasicBlock *LoopBB = llvm::BasicBlock::Create(Context, "loop", currentFunction);
+    llvm::BasicBlock *PostBB = llvm::BasicBlock::Create(Context, "post", currentFunction);
+
+    // Need to enter the CondBB from the predecessor basic block (LLVM fallthrough is explicit!)
+    Builder.CreateBr(CondBB);
+    Builder.SetInsertPoint(CondBB);
+    currentBasicBlock = CondBB;
+
+    stmt->cond->accept(*this);
+    llvm::Value *Cond = V;
+
+    llvm::Value *NeqZero = Builder.CreateFCmpONE(Cond, llvm::ConstantFP::get(Context, llvm::APFloat(0.0)), "while");
+    Builder.CreateCondBr(NeqZero, LoopBB, PostBB);
+
+    Builder.SetInsertPoint(LoopBB);
+    currentBasicBlock = LoopBB;
+    stmt->loop->accept(*this);
+    if (!currentBasicBlock->getTerminator())
+        Builder.CreateBr(CondBB);
+
+    Builder.SetInsertPoint(PostBB);
+    currentBasicBlock = PostBB;
+}
+
+void
+CodeGenerator::visit(AST::ReturnStmt *stmt)
+{
+    stmt->expr->accept(*this);
+    llvm::Value *ReturnValue = V;
+    if (!ReturnValue)
+        return;
+
+    if (!currentBasicBlock->getTerminator())
+        Builder.CreateRet(ReturnValue);
+    else
+        mi->error("attempted to insert `ret` at already terminated block");
+
+}
+
+void
+CodeGenerator::visit(AST::IOStmt *stmt)
+{
+    // To be implemented
+    ;
+}
+
+void
+CodeGenerator::visit(AST::Expr *expr)
+{
+    ;
+}
+
+void
+CodeGenerator::visit(AST::ExprBinOp *expr)
+{
+    expr->lhs->accept(*this);
+    llvm::Value *Left = V;
+    if (!Left)
+        return;
+
+    expr->rhs->accept(*this);
+    llvm::Value *Right = V;
+    if (!Right)
+        return;
+
+    switch (expr->op)
+    {
+        case AST::Operator::PLUS:
+            V = Builder.CreateFAdd(Left, Right, "add");
+            break;
+        case AST::Operator::MINUS:
+            V = Builder.CreateFSub(Left, Right, "sub");
+            break;
+        case AST::Operator::TIMES:
+            V = Builder.CreateFMul(Left, Right, "sub");
+            break;
+        case AST::Operator::DIV:
+            V = Builder.CreateFDiv(Left, Right, "sub");
+            break;
+        default:
+            return;
+    }
+}
+
+void
+CodeGenerator::visit(AST::ExprIdent *expr)
+{
+    std::string VarName = expr->ident;
+
+    llvm::Value *Local = Locals[VarName];
+
+    if (!Local)
+    {
+        mi->error("unknown variable: " + VarName);
+        return;
+    }
+
+    V = Builder.CreateLoad(Local, VarName);
+}
+
+void
+CodeGenerator::visit(AST::ExprNumber *expr)
+{
+    V = llvm::ConstantFP::get(Context, llvm::APFloat(expr->number));
+}
+
+void
+CodeGenerator::visit(AST::ExprFuncCall *expr)
+{
+    std::string FuncName = expr->ident;
+
+    llvm::Function *Func = Module->getFunction(FuncName);
+    if (!Func)
+    {
+        mi->error("unknown function: " + FuncName);
+        V = nullptr;
+        return;
+    }
+
+    size_t argsExpected = Func->arg_size();
+    size_t argsGiven = expr->args->exprs.size();
+    if (argsExpected != argsGiven)
+    {
+        std::stringstream ss;
+
+        ss << "too" << (argsExpected > argsGiven ? "few" : "many") << "arguments passed to " << FuncName
+            << ", expected " << argsExpected << ", have " << argsGiven;
+
+        mi->error(ss.str());
+        V = nullptr;
+        return;
+    }
+
+    std::vector<llvm::Value *> Args;
+
+    for (auto& e : expr->args->exprs)
+    {
+        e->accept(*this);
+
         if (!V)
-            return nullptr;
-    }
-    ctx.Builder.CreateBr(MergeBB);
+            return;
 
-    // Codegen of "then" can change the current block, update ThenBB for further insertions (???)
-    ThenBB = ctx.Builder.GetInsertBlock();
-
-    // Emit code for the "else" block.
-    F->getBasicBlockList().push_back(ElseBB);
-    ctx.Builder.SetInsertPoint(ElseBB);
-    ctx.currentBlock = ElseBB;
-    if (otherwise)
-    {
-        for (auto& Stmt : otherwise->stmts)
-        {
-            llvm::Value *V =  Stmt->codegen(ctx);
-            if (!V)
-                return nullptr;
-        }
-    }
-    ctx.Builder.CreateBr(MergeBB);
-
-    // Reorient the IRBuilder to the "merge" point, where subsequent instructions will be emitted to.
-    F->getBasicBlockList().push_back(MergeBB);
-    ctx.Builder.SetInsertPoint(MergeBB);
-    ctx.currentBlock = MergeBB;
-
-    // It is appropriate for the IfStmt to return the `Value *` of the AST::Cond node, since it is guaranteed not to be
-    // null at this point.
-    return CondV;
-}
-
-llvm::Value *
-AST::WhileStmt::codegen(CodeGen::Context &ctx)
-{
-    llvm::Function *F = ctx.GetCurrentFunction();
-
-    llvm::BasicBlock *PreLoopBB = llvm::BasicBlock::Create(ctx.TheContext, "preloop", F);
-    llvm::BasicBlock *LoopBB = llvm::BasicBlock::Create(ctx.TheContext, "loop", F);
-    llvm::BasicBlock *PostLoopBB = llvm::BasicBlock::Create(ctx.TheContext, "postloop", F);
-
-    // Emit code for "preloop".
-    ctx.Builder.SetInsertPoint(PreLoopBB);
-    ctx.currentBlock = PreLoopBB;
-    llvm::Value *CondV = cond->codegen(ctx);
-
-    if (!CondV)
-        return nullptr;
-
-    llvm::Value *BoolV = ctx.Builder.CreateFCmpONE(CondV, llvm::ConstantFP::get(ctx.TheContext, llvm::APFloat(0.0)),
-                                                   "loopcond");
-    ctx.Builder.CreateCondBr(BoolV, LoopBB, PostLoopBB);
-
-    // Emit code for "loop".
-    F->getBasicBlockList().push_back(LoopBB);
-    ctx.Builder.SetInsertPoint(LoopBB);
-    ctx.currentBlock = LoopBB;
-
-    if (!loop)
-        return nullptr;
-
-    for (auto& Stmt : loop->stmts)
-    {
-        llvm::Value *V = Stmt->codegen(ctx);
-        if (!V)
-            return nullptr;
-    }
-    ctx.Builder.CreateBr(PreLoopBB);
-
-    // TODO ???
-    PreLoopBB = ctx.Builder.GetInsertBlock();
-
-    // Reorient the IRBuilder to the "merge" point, where subsequent instructions will be emitted to.
-    F->getBasicBlockList().push_back(PostLoopBB);
-    ctx.Builder.SetInsertPoint(PostLoopBB);
-    ctx.currentBlock = PostLoopBB;
-
-    // It is appropriate for the WhileStmt to return the `Value *` of the AST::Cond node, since it is guaranteed not to
-    // be null at this point.
-    return CondV;
-}
-
-llvm::Value *
-AST::ReturnStmt::codegen(CodeGen::Context &ctx)
-{
-    llvm::Value *V = expr->codegen(ctx);
-    if (!V)
-        return nullptr;
-
-    // TODO This is a hack
-    if (ctx.currentBlock->getTerminator())
-    {
-        ctx.LogErrorV("cannot insert return, basic block already terminated");
-
-        // Return a not-null value so that code generation still continues
-        return V;
+        Args.push_back(V);
     }
 
-    ctx.Builder.CreateRet(V);
-    return V;
+    V = Builder.CreateCall(Func, Args, "call");
 }
 
-llvm::Value *
-AST::IOStmt::codegen(CodeGen::Context &ctx)
+void
+CodeGenerator::visit(AST::Cond *cond)
 {
-    return nullptr;
+    ;
 }
 
-llvm::Value *
-AST::ExprBinOp::codegen(CodeGen::Context& ctx)
+void
+CodeGenerator::visit(AST::CondUnOp *cond)
 {
-    llvm::Value *L = lhs->codegen(ctx);
-    llvm::Value *R = rhs->codegen(ctx);
+    cond->accept(*this);
+    llvm::Value *Operand = V;
+    if (!Operand)
+        return;
 
-    if (!L || !R)
-        return nullptr;
+    llvm::Value *OperandInt = Builder.CreateFPToUI(Operand, llvm::Type::getInt1Ty(Context), "ui");
+    llvm::Value *UIResult = nullptr;
 
-    switch (op)
+    switch (cond->op)
     {
-        case Operator::PLUS:
-            return ctx.Builder.CreateFAdd(L, R, "addtmp");
-        case Operator::MINUS:
-            return ctx.Builder.CreateFAdd(L, R, "subtmp");
-        case Operator::TIMES:
-            return ctx.Builder.CreateFMul(L, R, "multmp");
-        case Operator::DIV:
-            return ctx.Builder.CreateFDiv(L, R, "divtmp");
-        default:
-            return ctx.LogErrorV("invalid binary operator");
-    }
-}
-
-llvm::Value *
-AST::ExprIdent::codegen(CodeGen::Context& ctx)
-{
-    // Perform a lookup in the local variable scope, and then emit an LLVM `load` instruction for the matching `alloca`
-    // instruction (if it exists).
-    llvm::Value *V = ctx.LocalVars[ident];
-
-    if (!V)
-        ctx.LogErrorV("unknown variable referenced");
-
-    return ctx.Builder.CreateLoad(V, ident.c_str());
-}
-
-llvm::Value *
-AST::ExprNumber::codegen(CodeGen::Context& ctx)
-{
-    return llvm::ConstantFP::get(ctx.TheContext, llvm::APFloat(number));
-}
-
-llvm::Value *
-AST::ExprFuncCall::codegen(CodeGen::Context& ctx)
-{
-    // Look up the name in the global module table
-    llvm::Function *CalleeF = ctx.TheModule->getFunction(ident);
-
-    if (!CalleeF)
-        return ctx.LogErrorV("unknown function referenced");
-
-    if (CalleeF->arg_size() != args->exprs.size())
-        return ctx.LogErrorV("incorrect # of arguments passed");
-
-    std::vector<llvm::Value *> ArgsV;
-
-    for (auto& e : args->exprs)
-    {
-        ArgsV.push_back(e->codegen(ctx));
-
-        if (!ArgsV.back())
-            return nullptr;
-    }
-
-    return ctx.Builder.CreateCall(CalleeF, ArgsV, "calltmp");
-}
-
-llvm::Value *
-AST::CondUnOp::codegen(CodeGen::Context &ctx)
-{
-    llvm::Value *V = cond->codegen(ctx);
-
-    if (!V)
-        return nullptr;
-
-    llvm::Value *VInt = ctx.Builder.CreateFPToUI(V, llvm::Type::getInt1Ty(ctx.TheContext), "uitmp");
-
-    llvm::Value *Result = nullptr;
-
-    switch (op)
-    {
-        case Operator::NOT:
-            Result = ctx.Builder.CreateSub(llvm::ConstantInt::get(ctx.TheContext, llvm::APInt(1, 1)), VInt);
+        case AST::Operator::NOT:
+            UIResult = Builder.CreateSub(llvm::ConstantInt::get(Context, llvm::APInt(1, 1)), OperandInt,
+                    "not");
             break;
         default:
-            return ctx.LogErrorV("invalid unary operator");
+            return;
     }
 
-    return ctx.Builder.CreateUIToFP(Result, llvm::Type::getDoubleTy(ctx.TheContext), "fptmp");
+    V = Builder.CreateUIToFP(UIResult, llvm::Type::getDoubleTy(Context), "fp");
 }
 
-llvm::Value *
-AST::CondBinOp::codegen(CodeGen::Context &ctx)
+void
+CodeGenerator::visit(AST::CondBinOp *cond)
 {
-    llvm::Value *L = lhs->codegen(ctx);
-    llvm::Value *R = rhs->codegen(ctx);
+    cond->lhs->accept(*this);
+    llvm::Value *Left = V;
+    if (!Left)
+        return;
 
-    if (!L || !R)
-        return nullptr;
+    cond->rhs->accept(*this);
+    llvm::Value *Right = V;
+    if (!Right)
+        return;
 
-    llvm::Value *LInt = ctx.Builder.CreateFPToUI(L, llvm::Type::getInt1Ty(ctx.TheContext), "uitmp");
-    llvm::Value *RInt = ctx.Builder.CreateFPToUI(R, llvm::Type::getInt1Ty(ctx.TheContext), "uitmp");
+    llvm::Value *LeftInt = Builder.CreateFPToUI(Left, llvm::Type::getInt1Ty(Context), "ui");
+    llvm::Value *RightInt = Builder.CreateFPToUI(Right, llvm::Type::getInt1Ty(Context), "ui");
+    llvm::Value *UIResult = nullptr;
 
-    llvm::Value *Result = nullptr;
-
-    switch (op)
+    switch (cond->op)
     {
-        case Operator::AND:
-            Result = ctx.Builder.CreateAnd(LInt, RInt);
+        case AST::Operator::AND:
+            UIResult = Builder.CreateAnd(LeftInt, RightInt, "and");
             break;
-        case Operator::OR:
-            Result = ctx.Builder.CreateOr(LInt, RInt);
+        case AST::Operator::OR:
+            UIResult = Builder.CreateOr(LeftInt, RightInt, "or");
             break;
         default:
-            return ctx.LogErrorV("invalid binary operator");
+            return;
     }
 
-    return ctx.Builder.CreateUIToFP(Result, llvm::Type::getDoubleTy(ctx.TheContext), "fptmp");
+    V = Builder.CreateUIToFP(UIResult, llvm::Type::getDoubleTy(Context), "fp");
 }
 
-llvm::Value *
-AST::CondCompOp::codegen(CodeGen::Context &ctx)
+void
+CodeGenerator::visit(AST::CondCompOp *cond)
 {
-    llvm::Value *L = lhs->codegen(ctx);
-    llvm::Value *R = rhs->codegen(ctx);
+    cond->lhs->accept(*this);
+    llvm::Value *Left = V;
+    if (!Left)
+        return;
 
-    if (!L || !R)
-        return nullptr;
+    cond->rhs->accept(*this);
+    llvm::Value *Right = V;
+    if (!Right)
+        return;
 
-    llvm::Value *Result = nullptr;
+    llvm::Value *UIResult = nullptr;
 
-    switch (op)
+    switch (cond->op)
     {
-        case Operator::LT:
-            Result = ctx.Builder.CreateFCmpOLT(L, R);
+        case AST::Operator::LT:
+            UIResult = Builder.CreateFCmpOLT(Left, Right, "lt");
             break;
-        case Operator::LTEQ:
-            Result = ctx.Builder.CreateFCmpOLE(L, R);
+        case AST::Operator::LTEQ:
+            UIResult = Builder.CreateFCmpOLE(Left, Right, "le");
             break;
-        case Operator::EQ:
-            Result = ctx.Builder.CreateFCmpOEQ(L, R);
+        case AST::Operator::EQ:
+            UIResult = Builder.CreateFCmpOEQ(Left, Right, "eq");
             break;
-        case Operator::GTEQ:
-            Result = ctx.Builder.CreateFCmpOGE(L, R);
+        case AST::Operator::GTEQ:
+            UIResult = Builder.CreateFCmpOGE(Left, Right, "ge");
             break;
-        case Operator::GT:
-            Result = ctx.Builder.CreateFCmpOGT(L, R);
+        case AST::Operator::GT:
+            UIResult = Builder.CreateFCmpOGT(Left, Right, "gt");
             break;
         default:
-            return ctx.LogErrorV("invalid binary operator");
+            return;
     }
 
-    return ctx.Builder.CreateUIToFP(Result, llvm::Type::getDoubleTy(ctx.TheContext), "fptmp");
+    V = Builder.CreateUIToFP(UIResult, llvm::Type::getDoubleTy(Context), "fp");
 }
+
 
 } // end namespace explain

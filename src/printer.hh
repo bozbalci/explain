@@ -4,11 +4,14 @@
 #include <string>
 
 #include "ast.hh"
+#include "messages.hh"
 
 namespace explain {
 
 class PrettyPrinter : public AST::Consumer
 {
+    MessageIssuer *mi;
+
     int level;
 
     std::string spaces();
@@ -16,8 +19,8 @@ class PrettyPrinter : public AST::Consumer
     void dedent();
     std::string operatorToString(AST::Operator op);
 public:
-    PrettyPrinter()
-        : level(0) {}
+    explicit PrettyPrinter(MessageIssuer *mi)
+        : mi(mi), level(0) {}
 
     void visit(AST::Root *root) override;
     void visit(AST::BlockStmt *block) override;

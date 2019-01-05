@@ -6,14 +6,6 @@ namespace explain
 {
 
 void
-Canonicalizer::reportError(std::string msg)
-{
-    errorCount++;
-
-    std::cerr << msg << std::endl;
-}
-
-void
 Canonicalizer::visit(AST::Root *root)
 {
     // We will modify the AST by creating a `FuncDecl` node for the top level statements. This will be the entry point
@@ -86,7 +78,7 @@ Canonicalizer::visit(AST::FuncDecl *decl)
 
     if (!decl->args)
     {
-        reportError("missing FuncDeclArgs in FuncDecl");
+        mi->error("missing FuncDeclArgs in FuncDecl");
 
         return;
     }
@@ -94,7 +86,7 @@ Canonicalizer::visit(AST::FuncDecl *decl)
 
     if (!decl->body)
     {
-        reportError("missing BlockStmt in FuncDecl");
+        mi->error("missing BlockStmt in FuncDecl");
 
         return;
     }
@@ -102,7 +94,7 @@ Canonicalizer::visit(AST::FuncDecl *decl)
 
     if (!encounteredReturnStmt)
     {
-        reportError("no ReturnStmt inside block of FuncDecl");
+        mi->error("no ReturnStmt inside block of FuncDecl");
 
         return;
     }
@@ -115,7 +107,7 @@ Canonicalizer::visit(AST::AssignmentStmt *stmt)
 {
     if (!stmt->expr)
     {
-        reportError("missing Expr in AssignmentStmt");
+        mi->error("missing Expr in AssignmentStmt");
 
         return;
     }
@@ -127,7 +119,7 @@ Canonicalizer::visit(AST::IfStmt *stmt)
 {
     if (!stmt->cond)
     {
-        reportError("missing Cond in IfStmt");
+        mi->error("missing Cond in IfStmt");
 
         return;
     }
@@ -135,7 +127,7 @@ Canonicalizer::visit(AST::IfStmt *stmt)
 
     if (!stmt->then)
     {
-        reportError("missing BlockStmt (`then`) in IfStmt");
+        mi->error("missing BlockStmt (`then`) in IfStmt");
 
         return;
     }
@@ -150,7 +142,7 @@ Canonicalizer::visit(AST::WhileStmt *stmt)
 {
     if (!stmt->cond)
     {
-        reportError("missing Cond in WhileStmt");
+        mi->error("missing Cond in WhileStmt");
 
         return;
     }
@@ -158,7 +150,7 @@ Canonicalizer::visit(AST::WhileStmt *stmt)
 
     if (!stmt->loop)
     {
-        reportError("missing BlockStmt in WhileStmt");
+        mi->error("missing BlockStmt in WhileStmt");
 
         return;
     }
@@ -170,7 +162,7 @@ Canonicalizer::visit(AST::ReturnStmt *stmt)
 {
     if (!stmt->expr)
     {
-        reportError("missing Expr in ReturnStmt");
+        mi->error("missing Expr in ReturnStmt");
 
         return;
     }
@@ -188,7 +180,7 @@ Canonicalizer::visit(AST::IOStmt *stmt)
         case AST::Operator::OUTPUT:
             break;
         default:
-            reportError("invalid operator supplied to IOStmt");
+            mi->error("invalid operator supplied to IOStmt");
     }
 }
 
@@ -209,12 +201,12 @@ Canonicalizer::visit(AST::ExprBinOp *expr)
         case AST::Operator::DIV:
             break;
         default:
-            reportError("invalid operator supplied to ExprBinOp");
+            mi->error("invalid operator supplied to ExprBinOp");
     }
 
     if (!expr->lhs || !expr->rhs)
     {
-        reportError("missing operands to ExprBinOp");
+        mi->error("missing operands to ExprBinOp");
 
         return;
     }
@@ -242,7 +234,7 @@ Canonicalizer::visit(AST::ExprFuncCall *expr)
 
     if (!expr->args)
     {
-        reportError("missing FuncCallArgs in ExprFuncCall");
+        mi->error("missing FuncCallArgs in ExprFuncCall");
 
         return;
     }
@@ -263,12 +255,12 @@ Canonicalizer::visit(AST::CondUnOp *cond)
         case AST::Operator::NOT:
             break;
         default:
-            reportError("invalid operator supplied to CondBinOp");
+            mi->error("invalid operator supplied to CondBinOp");
     }
 
     if (!cond->cond)
     {
-        reportError("missing operand to CondUnOp");
+        mi->error("missing operand to CondUnOp");
 
         return;
     }
@@ -284,12 +276,12 @@ Canonicalizer::visit(AST::CondBinOp *cond)
         case AST::Operator::OR:
             break;
         default:
-            reportError("invalid operator supplied to CondBinOp");
+            mi->error("invalid operator supplied to CondBinOp");
     }
 
     if (!cond->lhs || !cond->rhs)
     {
-        reportError("missing operands to CondBinOp");
+        mi->error("missing operands to CondBinOp");
 
         return;
     }
@@ -309,12 +301,12 @@ Canonicalizer::visit(AST::CondCompOp *cond)
         case AST::Operator::GT:
             break;
         default:
-            reportError("invalid operator supplied to CondCompOp");
+            mi->error("invalid operator supplied to CondCompOp");
     }
 
     if (!cond->lhs || !cond->rhs)
     {
-        reportError("missing operands to CondCompOp");
+        mi->error("missing operands to CondCompOp");
 
         return;
     }

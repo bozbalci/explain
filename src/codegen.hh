@@ -1,42 +1,75 @@
 #ifndef EXPLAIN_CODEGEN_HH
 #define EXPLAIN_CODEGEN_HH
 
-#include <map>
-#include <memory>
-#include <string>
-
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/Function.h>
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Instructions.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/LegacyPassManager.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Type.h>
+#include <llvm/IR/Value.h>
+#include <llvm/IR/Verifier.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Target/TargetMachine.h>
+#include <llvm/Transforms/InstCombine/InstCombine.h>
+#include <llvm/Transforms/Scalar.h>
+#include <llvm/Transforms/Scalar/GVN.h>
+#include <llvm/Transforms/Utils.h>
 
 #include "ast.hh"
+#include "messages.hh"
 
 namespace explain {
 
-namespace CodeGen {
+class CodeGenerator : public AST::Consumer
+{
+    MessageIssuer *mi;
 
-class Context {
-public:
-    llvm::LLVMContext TheContext;
+    llvm::LLVMContext Context;
     llvm::IRBuilder<> Builder;
-    std::unique_ptr<llvm::Module> TheModule;
-    std::unique_ptr<llvm::legacy::FunctionPassManager> TheFPM;
-    std::map<std::string, llvm::AllocaInst *> LocalVars;
+    std::unique_ptr<llvm::Module> Module;
+    std::unique_ptr<llvm::legacy::FunctionPassManager> FPM;
 
-    std::string ScopeName;
-    llvm::BasicBlock *currentBlock;
+    std::map<std::string, llvm::AllocaInst *> Locals;
 
-    Context()
-        : Builder(llvm::IRBuilder<>(TheContext)), currentBlock(nullptr) {}
+    // The most recently generated LLVM value
+    llvm::Value *V;
 
-    void initialize();
+    llvm::Function *currentFunction = nullptr;
+    llvm::BasicBlock *currentBasicBlock = nullptr;
 
-    llvm::Function *GetCurrentFunction();
-    llvm::AllocaInst *EmitEntryBlockAlloca(llvm::Function *TheFunction, std::string VarName);
-    llvm::Value *LogErrorV(std::string str);
+    llvm::AllocaInst *EmitEntryBlockAlloca(const std::string& VarName);
+public:
+    explicit CodeGenerator(MessageIssuer *mi);
+
+    void printModule();
+
+    void visit(AST::Root *root) override;
+    void visit(AST::BlockStmt *block) override;
+    void visit(AST::FuncDeclArgs *args) override;
+    void visit(AST::FuncCallArgs *args) override;
+    void visit(AST::Entry *entry) override;
+    void visit(AST::Stmt *stmt) override;
+    void visit(AST::FuncDecl *decl) override;
+    void visit(AST::AssignmentStmt *stmt) override;
+    void visit(AST::IfStmt *stmt) override;
+    void visit(AST::WhileStmt *stmt) override;
+    void visit(AST::ReturnStmt *stmt) override;
+    void visit(AST::IOStmt *stmt) override;
+    void visit(AST::Expr *expr) override;
+    void visit(AST::ExprBinOp *expr) override;
+    void visit(AST::ExprIdent *expr) override;
+    void visit(AST::ExprNumber *expr) override;
+    void visit(AST::ExprFuncCall *expr) override;
+    void visit(AST::Cond *cond) override;
+    void visit(AST::CondUnOp *cond) override;
+    void visit(AST::CondBinOp *cond) override;
+    void visit(AST::CondCompOp *cond) override;
 };
 
-} // end namespace CodeGen
 } // end namespace explain
 
 #endif //EXPLAIN_CODEGEN_HH
