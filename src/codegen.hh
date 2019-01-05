@@ -44,6 +44,9 @@ class CodeGenerator : public AST::Consumer
     llvm::Function *currentFunction = nullptr;
     llvm::BasicBlock *currentBasicBlock = nullptr;
 
+    llvm::GlobalVariable *InputFmt = nullptr, *OutputFmt = nullptr;
+    llvm::Function *Printf = nullptr, *Scanf = nullptr;
+
     llvm::AllocaInst *EmitEntryBlockAlloca(const std::string& VarName);
 public:
     explicit CodeGenerator(MessageIssuer *mi);

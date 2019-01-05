@@ -45,6 +45,29 @@ CodeGenerator::CodeGenerator(MessageIssuer *mi)
     FPM->add(llvm::createCFGSimplificationPass());
 
     FPM->doInitialization();
+
+    // Set up printf and scanf externs
+
+    std::string IFmtS = "%lf";
+    llvm::Constant *IFmtSC = llvm::ConstantDataArray::getString(Context, IFmtS, true);
+    llvm::ArrayType *IFmtTy = llvm::ArrayType::get(llvm::Type::getInt8Ty(Context), IFmtS.size() + 1);
+    InputFmt = new llvm::GlobalVariable(*Module, IFmtTy, /* isConstant = */ true,
+            llvm::GlobalValue::InternalLinkage, /* Initializer = */ IFmtSC, "ifmt", /* InsertBefore = */ nullptr,
+            llvm::GlobalValue::NotThreadLocal, /* AddressSpace = */ 0, /* isExternallyInitialized = */ 0);
+
+    std::string OFmtS = "%lf\x0A";
+    llvm::Constant *OFmtSC = llvm::ConstantDataArray::getString(Context, OFmtS, true);
+    llvm::ArrayType *OFmtTy = llvm::ArrayType::get(llvm::Type::getInt8Ty(Context), OFmtS.size() + 1);
+    OutputFmt = new llvm::GlobalVariable(*Module, OFmtTy, /* isConstant = */ true,
+            llvm::GlobalValue::InternalLinkage, /* Initializer = */ OFmtSC, "ofmt", /* InsertBefore = */ nullptr,
+            llvm::GlobalValue::NotThreadLocal, /* AddressSpace = */ 0, /* isExternallyInitialized = */ 0);
+
+    std::vector<llvm::Type *> CommonArgsTy { llvm::Type::getInt8PtrTy(Context) };
+    llvm::FunctionType *CommonTy = llvm::FunctionType::get(llvm::Type::getInt32Ty(Context), CommonArgsTy,
+            /* isVarArg = */ true);
+
+    Scanf = llvm::Function::Create(CommonTy, llvm::Function::ExternalLinkage, "scanf", Module.get());
+    Printf = llvm::Function::Create(CommonTy, llvm::Function::ExternalLinkage, "printf", Module.get());
 }
 
 void CodeGenerator::emitObject(const std::string& Filename)
@@ -288,8 +311,52 @@ CodeGenerator::visit(AST::ReturnStmt *stmt)
 void
 CodeGenerator::visit(AST::IOStmt *stmt)
 {
-    // To be implemented
-    ;
+    std::string VarName = stmt->ident;
+
+    llvm::Value *Local = Locals[VarName];
+
+    std::vector<llvm::Value *> IdxList(2, llvm::ConstantInt::get(llvm::Type::getInt32Ty(Context), 0));
+
+    switch (stmt->op)
+    {
+        case AST::Operator::INPUT:
+        {
+            llvm::Value *InputRef;
+
+            if (!Local)
+            {
+                llvm::AllocaInst *Alloca = EmitEntryBlockAlloca(VarName);
+                Locals[VarName] = Alloca;
+                InputRef = Alloca;
+            }
+            else
+                InputRef = Local;
+
+            llvm::Value *InputGEP = Builder.CreateGEP(InputFmt, IdxList);
+
+            std::vector<llvm::Value *> ScanfArgs {InputGEP, InputRef};
+            Builder.CreateCall(Scanf, ScanfArgs);
+
+            break;
+        }
+        case AST::Operator::OUTPUT:
+        {
+            if (!Local)
+            {
+                mi->error("unknown variable: " + VarName);
+                return;
+            }
+
+            llvm::Value *OutputGEP = Builder.CreateGEP(OutputFmt, IdxList);
+            llvm::Value *OutputVal = Builder.CreateLoad(Local, VarName);
+            std::vector<llvm::Value *> PrintfArgs {OutputGEP, OutputVal};
+            Builder.CreateCall(Printf, PrintfArgs);
+
+            break;
+        }
+        default:
+            return;
+    }
 }
 
 void
