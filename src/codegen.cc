@@ -453,7 +453,7 @@ CodeGenerator::visit(AST::ExprFuncCall *expr)
     {
         std::stringstream ss;
 
-        ss << "too" << (argsExpected > argsGiven ? "few" : "many") << "arguments passed to " << FuncName
+        ss << "too " << (argsExpected > argsGiven ? "few" : "many") << " arguments passed to " << FuncName
             << ", expected " << argsExpected << ", have " << argsGiven;
 
         mi->error(ss.str());
