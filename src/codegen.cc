@@ -485,7 +485,7 @@ CodeGenerator::visit(AST::Cond *cond)
 void
 CodeGenerator::visit(AST::CondUnOp *cond)
 {
-    cond->accept(*this);
+    cond->cond->accept(*this);
     llvm::Value *Operand = V;
     if (!Operand)
         return;
