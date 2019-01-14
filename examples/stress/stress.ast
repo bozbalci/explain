@@ -1,0 +1,717 @@
+fun alotofarguments
+  args
+    arg a
+    arg b
+    arg c
+    arg d
+    arg e
+    arg f
+    arg g
+    arg h
+    arg i
+    arg j
+    arg k
+    arg l
+    arg m
+    arg n
+    arg o
+    arg p
+    arg aa
+    arg bb
+    arg cc
+    arg dd
+    arg ee
+    arg ff
+    arg gg
+    arg hh
+    arg ii
+    arg jj
+    arg kk
+    arg ll
+    arg mm
+    arg nn
+    arg oo
+    arg pp
+    arg aaa
+    arg bbb
+    arg ccc
+    arg ddd
+    arg eee
+    arg fff
+    arg ggg
+    arg hhh
+    arg iii
+    arg jjj
+    arg kkk
+    arg lll
+    arg mmm
+    arg nnn
+    arg ooo
+    arg ppp
+    arg aaaa
+    arg bbbb
+    arg cccc
+    arg dddd
+    arg eeee
+    arg ffff
+    arg gggg
+    arg hhhh
+    arg iiii
+    arg jjjj
+    arg kkkk
+    arg llll
+    arg mmmm
+    arg nnnn
+    arg oooo
+    arg pppp
+  return
+    +
+      a
+      pppp
+
+fun testalotofarguments
+  args
+  return
+    call alotofarguments
+      args
+        arg
+          1
+        arg
+          2
+        arg
+          3
+        arg
+          4
+        arg
+          5
+        arg
+          6
+        arg
+          7
+        arg
+          8
+        arg
+          9
+        arg
+          10
+        arg
+          11
+        arg
+          12
+        arg
+          13
+        arg
+          14
+        arg
+          15
+        arg
+          16
+        arg
+          17
+        arg
+          18
+        arg
+          19
+        arg
+          20
+        arg
+          21
+        arg
+          22
+        arg
+          23
+        arg
+          24
+        arg
+          25
+        arg
+          26
+        arg
+          27
+        arg
+          28
+        arg
+          29
+        arg
+          30
+        arg
+          31
+        arg
+          32
+        arg
+          33
+        arg
+          34
+        arg
+          35
+        arg
+          36
+        arg
+          37
+        arg
+          38
+        arg
+          39
+        arg
+          40
+        arg
+          41
+        arg
+          42
+        arg
+          43
+        arg
+          44
+        arg
+          45
+        arg
+          46
+        arg
+          47
+        arg
+          48
+        arg
+          49
+        arg
+          50
+        arg
+          51
+        arg
+          52
+        arg
+          53
+        arg
+          54
+        arg
+          55
+        arg
+          56
+        arg
+          57
+        arg
+          58
+        arg
+          59
+        arg
+          60
+        arg
+          61
+        arg
+          62
+        arg
+          63
+        arg
+          64
+
+fun unreasonablylongfunctionnameaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  args
+  return
+    0
+
+fun triviallyoptimizabledeepnesting
+  args
+  if
+    >
+      1
+      0
+  then
+    if
+      >
+        1
+        0
+    then
+      if
+        >
+          1
+          0
+      then
+        if
+          >
+            1
+            0
+        then
+          if
+            >
+              1
+              0
+          then
+            if
+              >
+                1
+                0
+            then
+              if
+                >
+                  1
+                  0
+              then
+                if
+                  >
+                    1
+                    0
+                then
+                  if
+                    >
+                      1
+                      0
+                  then
+                    if
+                      >
+                        1
+                        0
+                    then
+                      if
+                        >
+                          1
+                          0
+                      then
+                        if
+                          >
+                            1
+                            0
+                        then
+                          if
+                            >
+                              1
+                              0
+                          then
+                            if
+                              >
+                                1
+                                0
+                            then
+                              if
+                                >
+                                  1
+                                  0
+                              then
+                                if
+                                  >
+                                    1
+                                    0
+                                then
+                                  if
+                                    >
+                                      1
+                                      0
+                                  then
+                                    if
+                                      >
+                                        1
+                                        0
+                                    then
+                                      if
+                                        >
+                                          1
+                                          0
+                                      then
+                                        if
+                                          >
+                                            1
+                                            0
+                                        then
+                                          if
+                                            >
+                                              1
+                                              0
+                                          then
+                                            if
+                                              >
+                                                1
+                                                0
+                                            then
+                                              if
+                                                >
+                                                  1
+                                                  0
+                                              then
+                                                if
+                                                  >
+                                                    1
+                                                    0
+                                                then
+                                                  if
+                                                    >
+                                                      1
+                                                      0
+                                                  then
+                                                    if
+                                                      >
+                                                        1
+                                                        0
+                                                    then
+                                                      if
+                                                        >
+                                                          1
+                                                          0
+                                                      then
+                                                        if
+                                                          >
+                                                            1
+                                                            0
+                                                        then
+                                                          if
+                                                            >
+                                                              1
+                                                              0
+                                                          then
+                                                            return
+                                                              42
+  return
+    0
+
+fun iterativefactorial
+  args
+    arg n
+  := product
+    1
+  := j
+    1
+  while
+    <=
+      j
+      n
+  do
+    := product
+      *
+        product
+        j
+    := j
+      +
+        j
+        1
+  return
+    product
+
+fun recursivefibonacci
+  args
+    arg n
+  if
+    or
+      ==
+        n
+        1
+      ==
+        n
+        2
+  then
+    return
+      1
+  return
+    +
+      call recursivefibonacci
+        args
+          arg
+            -
+              n
+              1
+      call recursivefibonacci
+        args
+          arg
+            -
+              n
+              2
+
+fun calculatepi
+  args
+    arg precision
+  := i
+    1
+  := result
+    1
+  := sign
+    -
+      0
+      1
+  while
+    <=
+      i
+      precision
+  do
+    := result
+      +
+        result
+        /
+          sign
+          +
+            *
+              2
+              i
+            1
+    := i
+      +
+        i
+        1
+    := sign
+      -
+        0
+        sign
+  return
+    *
+      4
+      result
+
+fun abs
+  args
+    arg x
+  if
+    <
+      x
+      0
+  then
+    return
+      -
+        0
+        x
+  else
+    return
+      x
+
+fun eq
+  args
+    arg a
+    arg b
+  if
+    <
+      call abs
+        args
+          arg
+            -
+              a
+              b
+      0.001
+  then
+    return
+      1
+  else
+    return
+      -
+        0
+        1
+
+fun euclideangcd
+  args
+    arg a
+    arg b
+  while
+    <
+      call eq
+        args
+          arg
+            a
+          arg
+            b
+      0
+  do
+    if
+      >
+        a
+        b
+    then
+      := a
+        -
+          a
+          b
+    else
+      := b
+        -
+          b
+          a
+  return
+    a
+
+fun modulo
+  args
+    arg a
+    arg b
+  := k
+    0
+  while
+    >=
+      -
+        a
+        *
+          k
+          b
+      b
+  do
+    := k
+      +
+        k
+        1
+  return
+    -
+      a
+      *
+        k
+        b
+
+fun iseven
+  args
+    arg n
+  if
+    ==
+      call modulo
+        args
+          arg
+            n
+          arg
+            2
+      0
+  then
+    return
+      1
+  else
+    return
+      -
+        0
+        1
+
+fun isodd
+  args
+    arg n
+  return
+    -
+      1
+      call iseven
+        args
+          arg
+            n
+
+fun exponentiationbysquaring
+  args
+    arg x
+    arg n
+  if
+    <
+      n
+      0
+  then
+    return
+      call exponentiationbysquaring
+        args
+          arg
+            /
+              1
+              x
+          arg
+            -
+              0
+              n
+  if
+    ==
+      n
+      0
+  then
+    return
+      1
+  if
+    ==
+      n
+      1
+  then
+    return
+      x
+  if
+    >
+      call iseven
+        args
+          arg
+            n
+      1
+  then
+    return
+      call exponentiationbysquaring
+        args
+          arg
+            *
+              x
+              x
+          arg
+            /
+              n
+              2
+  else
+    return
+      *
+        x
+        call exponentiationbysquaring
+          args
+            arg
+              *
+                x
+                x
+            arg
+              /
+                -
+                  n
+                  1
+                2
+
+fun etothepower
+  args
+    arg n
+  return
+    call exponentiationbysquaring
+      args
+        arg
+          2.71828
+        arg
+          n
+
+fun xpln_main
+  args
+  := z
+    call testalotofarguments
+      args
+  output z
+  := z
+    call unreasonablylongfunctionnameaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      args
+  := z
+    call triviallyoptimizabledeepnesting
+      args
+  output z
+  := z
+    call iterativefactorial
+      args
+        arg
+          20
+  output z
+  := z
+    call recursivefibonacci
+      args
+        arg
+          30
+  output z
+  := z
+    call calculatepi
+      args
+        arg
+          1e+08
+  output z
+  := z
+    call euclideangcd
+      args
+        arg
+          50500
+        arg
+          100899
+  output z
+  := z
+    call modulo
+      args
+        arg
+          100
+        arg
+          7
+  output z
+  := z
+    call etothepower
+      args
+        arg
+          15
+  output z
+  return
+    0
+

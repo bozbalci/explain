@@ -1,0 +1,209 @@
+fun ALotOfArguments(a    , b    , c    , d    , e    , f    , g    , h   ,
+                    i    , j    , k    , l    , m    , n    , o    , p   ,
+                    aa   , bb   , cc   , dd   , ee   , ff   , gg   , hh  ,
+                    ii   , jj   , kk   , ll   , mm   , nn   , oo   , pp  ,
+                    aaa  , bbb  , ccc  , ddd  , eee  , fff  , ggg  , hhh ,
+                    iii  , jjj  , kkk  , lll  , mmm  , nnn  , ooo  , ppp ,
+                    aaaa , bbbb , cccc , dddd , eeee , ffff , gggg , hhhh,
+                    iiii , jjjj , kkkk , llll , mmmm , nnnn , oooo , pppp)
+    return a + pppp;
+endf;
+
+fun TestALotOfArguments()
+    return ALotOfArguments(1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10, 11, 12, 13, 14, 15, 16,
+                           17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+                           33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+                           49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64);
+endf;
+
+z := testalotofarguments();
+output z;
+
+fun UnreasonablyLongFunctionNameAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA()
+    return 0;
+endf;
+
+z := UnreasonablyLongFunctionNameAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA();
+
+fun TriviallyOptimizableDeepNesting()
+    if 1 > 0
+        if 1 > 0
+            if 1 > 0
+                if 1 > 0
+                    if 1 > 0
+                        if 1 > 0
+                            if 1 > 0
+                                if 1 > 0
+                                    if 1 > 0
+                                        if 1 > 0
+                                            if 1 > 0
+                                                if 1 > 0
+                                                    if 1 > 0
+                                                        if 1 > 0
+                                                            if 1 > 0
+                                                                if 1 > 0
+                                                                    if 1 > 0
+                                                                        if 1 > 0
+                                                                            if 1 > 0
+                                                                                if 1 > 0
+                                                                                    if 1 > 0
+                                                                                        if 1 > 0
+                                                                                            if 1 > 0
+                                                                                                if 1 > 0
+                                                                                                    if 1 > 0
+                                                                                                        if 1 > 0
+                                                                                                            if 1 > 0
+                                                                                                                if 1 > 0
+                                                                                                                    if 1 > 0
+                                                                                                                        return 42;
+                                                                                                                    endi;
+                                                                                                                endi;
+                                                                                                            endi;
+                                                                                                        endi;
+                                                                                                    endi;
+                                                                                                endi;
+                                                                                            endi;
+                                                                                        endi;
+                                                                                    endi;
+                                                                                endi;
+                                                                            endi;
+                                                                        endi;
+                                                                    endi;
+                                                                endi;
+                                                            endi;
+                                                        endi;
+                                                    endi;
+                                                endi;
+                                            endi;
+                                        endi;
+                                    endi;
+                                endi;
+                            endi;
+                        endi;
+                    endi;
+                endi;
+            endi;
+        endi;
+    endi;
+
+    return 0;
+endf;
+
+z := triviallyoptimizabledeepnesting();
+output z;
+
+fun IterativeFactorial(n)
+    product := 1;
+    j := 1;
+    while j <= n
+        product := product * j;
+        j := j + 1;
+    endw;
+    return product;
+endf;
+
+z :=  IterativeFactorial(20);
+output z;
+
+fun RecursiveFibonacci(n)
+    if n == 1 or n == 2 return 1; endi;
+    return RecursiveFibonacci(n - 1) + RecursiveFibonacci(n - 2);
+endf;
+
+z :=  RecursiveFibonacci(30);
+output z;
+
+fun CalculatePi(precision)
+    i := 1;
+    result := 1;
+    sign := 0 - 1;
+
+    while i <= precision
+        result := result + sign / (2*i + 1);
+        i := i + 1;
+        sign := 0 - sign;
+    endw;
+
+    return 4 * result;
+endf;
+
+z := CalculatePi(100000000);
+output z;
+
+fun abs(x)
+    if x < 0
+        return 0-x;
+    else
+        return x;
+    endi;
+endf;
+
+fun eq(a, b)
+    if abs(a - b) < 0.001
+        return 1;
+    else
+        return 0-1;
+    endi;
+endf;
+
+fun EuclideanGCD(a, b)
+    while eq(a, b) < 0
+        if a > b
+            a := a - b;
+        else
+            b := b - a;
+        endi;
+    endw;
+
+    return a;
+endf;
+
+z := EuclideanGCD(50500, 100899);
+output z;
+
+fun Modulo(a, b)
+    k := 0;
+    while a - k * b >= b
+        k := k + 1;
+    endw;
+    return a - k * b;
+endf;
+
+z := modulo(100, 7);
+output z;
+
+fun IsEven(n)
+    if modulo(n, 2) == 0
+        return 1;
+    else
+        return 0-1;
+    endi;
+endf;
+
+fun IsOdd(n)
+    return 1 - IsEven(n);
+endf;
+
+fun ExponentiationBySquaring(x, n)
+    if n < 0
+        return ExponentiationBySquaring(1 / x, 0-n);
+    endi;
+
+    if n == 0 return 1; endi;
+    if n == 1 return x; endi;
+
+    if IsEven(n) > 1
+        return ExponentiationBySquaring(x * x, n / 2);
+    else
+        return x * ExponentiationBySquaring(x * x, (n - 1) / 2);
+    endi;
+endf;
+
+fun EToThePower(n)
+    return ExponentiationBySquaring(2.718281828459045, n);
+endf;
+
+z := EToThePower(15);
+output z;
+
+return 0; 
