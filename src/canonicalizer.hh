@@ -1,7 +1,10 @@
 #ifndef EXPLAIN_CANONICALIZER_HH
 #define EXPLAIN_CANONICALIZER_HH
 
+#include <algorithm>
+#include <map>
 #include <string>
+#include <vector>
 
 #include "ast.hh"
 #include "messages.hh"
@@ -23,12 +26,16 @@ namespace explain {
 ///    4.) Every `FuncDecl` node has at least one `ReturnStmt` within their body.
 ///    5.) Every node following a `ReturnStmt` inside `BlockStmt` nodes is pruned.
 ///    6.) Every node with an Operator field holds a valid operator for their purposes.
+///    7.) No argument name is repeated in formal parameter definitions.
+///    8.) No function is redefined.
 ///
 class Canonicalizer : public AST::Consumer
 {
     MessageIssuer *mi;
 
     std::string mangledMain = "xpln_mangled_main";
+
+    std::vector<std::string> registeredFuncNames;
     bool encounteredReturnStmt;
 public:
     explicit Canonicalizer(MessageIssuer *mi)

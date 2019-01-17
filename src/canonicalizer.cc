@@ -1,7 +1,5 @@
 #include "canonicalizer.hh"
 
-#include <vector>
-
 namespace explain
 {
 
@@ -46,7 +44,12 @@ Canonicalizer::visit(AST::BlockStmt *block)
 void
 Canonicalizer::visit(AST::FuncDeclArgs *args)
 {
-    ;
+    std::vector<std::string> copy = args->idents;
+    std::sort(copy.begin(), copy.end());
+    const auto duplicate = std::adjacent_find(copy.begin(), copy.end());
+
+    if (duplicate != copy.end())
+        mi->error("formal parameter '" + *duplicate + "' is declared more than once");
 }
 
 void
@@ -71,6 +74,15 @@ Canonicalizer::visit(AST::Stmt *stmt)
 void
 Canonicalizer::visit(AST::FuncDecl *decl)
 {
+
+    if (std::find(registeredFuncNames.begin(), registeredFuncNames.end(), decl->ident) != registeredFuncNames.end())
+    {
+        mi->error("redefinition of function '" + decl->ident + "'");
+
+        return;
+    }
+
+    registeredFuncNames.push_back(decl->ident);
     encounteredReturnStmt = false;
 
     if (!decl->isXplnEntry && decl->ident == "main")
