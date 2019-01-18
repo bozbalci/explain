@@ -1,5 +1,7 @@
 # explain
 
+[![lines of code](https://tokei.rs/b1/github/bozbalci/explain)](https://github.com/Aaronepower/tokei)
+
 explain is an _industrial grade_ compiler for [XPLN]. It is built using `flex`, `bison` and LLVM.
 
 [XPLN]: https://github.com/bozsahin/ceng444/blob/master/project-material/xpl-specs-fall2018.pdf
@@ -13,11 +15,6 @@ etc.)
 * Option to emit LLVM intermediate representation
 * Native code generation for X86, X86-64, PowerPC, PowerPC-64, ARM, MIPS and many more architectures
 
-## Planned features
-
-* Support for the DWARF debugging standard
-* More aggressive optimizations including function inlining
-* Just-in-time compilation and interpreter support
 
 ## Requirements
 
@@ -64,9 +61,9 @@ After compiling, install `explain` somewhere in your path. To see all available 
     If no stage selection option is specified, then every stage will be run and
     the linker is run to produce an executable.
 
-## Example
+## Examples
 
-### convert.xpln: Convert °F to °C
+### convert: A tour of `explain` by converting °F to °C
 
 This example is located at `examples/convert.xpln`.
 
@@ -191,3 +188,78 @@ To obtain a pretty-printed form of the abstract syntax tree after some basic man
           args
             arg
               10
+
+### stress: General education & stress test for XPLN compilers
+
+This stress test was written by me to challenge other students of Ceng444 to test their compilers against mine. It
+features:
+
+* function definition and call with 64 arguments
+* case-insensitive identifiers
+* function definition and call with a very long name (>1024 chars)
+* trivially optimizable deep nesting (constant propagation and dead code elimination test)
+* iterative implementation of the factorial
+* recursive implementation of Fibonacci numbers
+* iterative calculation of Pi
+* iterative implementation of the Euclidean algorithm for finding the GCD of two numbers
+* iterative algorithm for the modulo operator
+* recursive implementation of exponentiation by squaring
+
+`explain` produced a **15512 byte x86-64 executable in 0.122 seconds**, and the **program runs in 0.467 seconds**,
+producing the following output:
+
+    65.000000
+    42.000000
+    2432902008176640000.000000
+    832040.000000
+    3.141593
+    101.000000
+    2.000000
+    3269017.372472
+    
+Here is a line-by-line breakdown of the expected results:
+
+* 64 + 1
+* Just 42
+* Factorial of 20
+* 30th Fibonacci number
+* Pi, calculated using the Gregory-Leibniz series with 100,000,000 iterations
+* Greatest common divisor of 50500 and 100899
+* Remainder of the division 100 / 7
+* e to the 15th power
+
+The stress test files can be found under `examples/stress` within this repository. The outputs were obtained by the
+following series of invocations:
+
+    $ explain stress.xpln -o stress.ast --emit-ast
+    $ explain stress.xpln -o stress.ll --emit-llvm
+    $ llc -o stress_mips.s -march=mips stress.ll
+    $ llc -o stress_x86_64.s -march=x86-64 stress.ll
+    
+### errors: Compiler diagnostics, error reporting and recovery
+
+All of the following examples are under `examples/errors`.
+
+`explain` outputs diagnostics where it can. These scenarios include the following:
+
+* syntax errors (`bad_tokens.xpln`, `recover.xpln`)
+* argument count mismatch in function definition and function call (`arg_count.xpln`)
+* argument redefinition (`arg_repeat.xpln`)
+* division by zero (`div_by_zero.xpln`)
+* redefinition of function (`fun_redefinition.xpln`)
+* missing return statements (`return_missing.xpln`)
+* usage of undefined variables and functions (`undefined.xpln`)
+* LLVM function & module verifier errors
+
+The diagnostic output is colored and contains source location information. See the image below:
+
+![Diagnostics screenshot](images/diagnostics.png)
+
+## Contributing
+
+If you feel like hacking `explain`, feel free to open a pull request. If you implement any of the following features
+you'd be saving me a lot of time!
+
+* Highlighting errors like `clang` does
+* Support for the DWARF debugging standard
+* Support for different optimization levels, and more agressive optimizations like function inlining

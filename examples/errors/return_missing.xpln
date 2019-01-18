@@ -1,0 +1,6 @@
+fun print(a)
+    output a;
+endf;
+
+z:=print(33);
+return 0;
