@@ -188,7 +188,6 @@ Canonicalizer::visit(AST::ExprBinOp *expr)
         auto ExprNum = dynamic_cast<AST::ExprNumber *>(expr->rhs.get());
         if (ExprNum->number == 0)
             mi->warning("division by zero is undefined", &expr->location);
-        delete ExprNum;
     }
 
     expr->lhs->accept(*this);
