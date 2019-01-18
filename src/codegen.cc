@@ -135,7 +135,7 @@ CodeGenerator::visit(AST::Root *root)
     if (llvm::verifyModule(*Module, &OS))
     {
         OS.flush();
-        mi->error("llvm::verifyModule failed: " + str);
+        mi->error("LLVM Module Verifier Failed: " + str);
         return;
     }
 }
@@ -205,7 +205,7 @@ CodeGenerator::visit(AST::FuncDecl *decl)
     if (llvm::verifyFunction(*F, &OS))
     {
         OS.flush();
-        mi->error("llvm::verifyFunction failed for function " + FuncName + ": " + str);
+        mi->error("LLVM Function Verifier Failed, function: " + FuncName + ", message: " + str);
         F->eraseFromParent();
 
         return;
@@ -319,7 +319,7 @@ CodeGenerator::visit(AST::ReturnStmt *stmt)
     if (!currentBasicBlock->getTerminator())
         Builder.CreateRet(ReturnValue);
     else
-        mi->error("attempted to insert `ret` at already terminated block");
+        mi->fatal_error("cannot insert 'ret' at an already terminated basic block");
 
 }
 
@@ -358,7 +358,7 @@ CodeGenerator::visit(AST::IOStmt *stmt)
         {
             if (!Local)
             {
-                mi->error("unknown variable: " + VarName);
+                mi->error("use of undefined variable '" + VarName + "' in output statement", &stmt->location);
                 return;
             }
 
@@ -421,7 +421,7 @@ CodeGenerator::visit(AST::ExprIdent *expr)
 
     if (!Local)
     {
-        mi->error("unknown variable: " + VarName);
+        mi->error("use of undefined variable '" + VarName + "' in expression", &expr->location);
         return;
     }
 
@@ -442,7 +442,7 @@ CodeGenerator::visit(AST::ExprFuncCall *expr)
     llvm::Function *Func = Module->getFunction(FuncName);
     if (!Func)
     {
-        mi->error("unknown function: " + FuncName);
+        mi->error("call to undefined function '" + FuncName + "' in expression", &expr->location);
         V = nullptr;
         return;
     }
@@ -456,7 +456,7 @@ CodeGenerator::visit(AST::ExprFuncCall *expr)
         ss << "too " << (argsExpected > argsGiven ? "few" : "many") << " arguments passed to " << FuncName
             << ", expected " << argsExpected << ", have " << argsGiven;
 
-        mi->error(ss.str());
+        mi->error(ss.str(), &expr->location);
         V = nullptr;
         return;
     }

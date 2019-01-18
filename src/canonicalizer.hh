@@ -35,7 +35,7 @@ class Canonicalizer : public AST::Consumer
 
     std::string mangledMain = "xpln_mangled_main";
 
-    std::vector<std::string> registeredFuncNames;
+    std::map<std::string, yy::location *> registeredFunctions;
     bool encounteredReturnStmt;
 public:
     explicit Canonicalizer(MessageIssuer *mi)

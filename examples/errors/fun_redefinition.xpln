@@ -6,8 +6,8 @@ fun foo(a)
     return a + a;
 endf;
 
-fun bar(a, a)
-    return a + a;
+fun foo(a)
+    return a + a + a;
 endf;
 
 z := foo(1);

@@ -1,6 +1,8 @@
 #ifndef EXPLAIN_AST_HH
 #define EXPLAIN_AST_HH
 
+#include "location.hh"
+
 #include <iostream>
 #include <vector>
 #include <memory>
@@ -106,10 +108,13 @@ enum class Operator
 class Node
 {
 public:
+    yy::location location;
+
     Node() = default;
     virtual ~Node() = default;
     virtual void accept(Consumer&) = 0;
     virtual NodeType getNodeType() = 0;
+    void setLocation(const yy::location& location) { this->location = location; }
 };
 
 //===--------------------------------------------------------------------------------===//

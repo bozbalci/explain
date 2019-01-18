@@ -52,6 +52,7 @@ main(int argc, char *argv[])
 
     Driver d;
     explain::MessageIssuer mi;
+    d.mi = &mi;
 
     if (vm.count("help"))
     {
@@ -77,19 +78,40 @@ main(int argc, char *argv[])
     auto inputFileName = vm["input"].as<std::string>();
     auto outputFileName = vm["output"].as<std::string>();
 
+    std::string moduleName;
+
+    if (inputFileName == "-")
+        moduleName = "stdin";
+    else
+    {
+        boost::filesystem::path p(inputFileName);
+        moduleName = p.filename().string();
+    }
+
     if (vm.count("trace-scan"))
         d.trace_scanning = true;
 
     if (vm.count("trace-parse"))
         d.trace_parsing = true;
 
-    if (d.parse(inputFileName))
+    // ===--------------------------------------------------------------------------===
+    // SCANNING & PARSING
+    // ===--------------------------------------------------------------------------===
+    int parse = d.parse(inputFileName);
+    mi.checkpoint();
+    if (parse)
         std::exit(EXIT_FAILURE);
 
+    // ===--------------------------------------------------------------------------===
+    // PROGRAM TRANSFORMATIONS AND CODE GENERATION SAFETY CHECKS
+    // ===--------------------------------------------------------------------------===
     explain::Canonicalizer canonicalizer(&mi);
     d.accept(canonicalizer);
     mi.checkpoint();
 
+    // ===--------------------------------------------------------------------------===
+    // ABSTRACT SYNTAX TREE PRETTY-PRINTING
+    // ===--------------------------------------------------------------------------===
     if (vm.count("emit-ast"))
     {
         std::ofstream outputFile(outputFileName);
@@ -103,34 +125,34 @@ main(int argc, char *argv[])
         }
     }
 
-    std::string moduleName;
-
-    if (inputFileName == "-")
-        moduleName = "stdin";
-    else
-    {
-        boost::filesystem::path p(inputFileName);
-        moduleName = p.filename().string();
-    }
-
+    // ===--------------------------------------------------------------------------===
+    // LLVM IR GENERATION
+    // ===--------------------------------------------------------------------------===
     explain::CodeGenerator codeGenerator(&mi, moduleName);
     d.accept(codeGenerator);
     mi.checkpoint();
 
+    // ===--------------------------------------------------------------------------===
+    // LLVM IR EMISSION
+    // ===--------------------------------------------------------------------------===
     if (vm.count("emit-llvm"))
     {
         codeGenerator.printModule(outputFileName);
         std::exit(EXIT_SUCCESS);
     }
 
-
+    // ===--------------------------------------------------------------------------===
+    // OBJECT EMISSION
+    // ===--------------------------------------------------------------------------===
     if (vm.count("emit-obj"))
     {
         codeGenerator.emitObject(outputFileName);
         std::exit(EXIT_SUCCESS);
     }
 
-    // All options have been exhausted -- emit object and link.
+    // ===--------------------------------------------------------------------------===
+    // LINKING
+    // ===--------------------------------------------------------------------------===
     std::string objectDestination = boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.o").string();
     std::string driverDestination = boost::filesystem::unique_path("%%%%-%%%%-%%%%-%%%%.c").string();
 
@@ -143,6 +165,4 @@ main(int argc, char *argv[])
     std::system(cmd.str().c_str());
     std::remove(objectDestination.c_str());
     std::remove(driverDestination.c_str());
-
-    mi.checkpoint();
 }

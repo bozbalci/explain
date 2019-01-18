@@ -136,23 +136,32 @@ entries
 
 entry
     : stmt ";"
-        { $$ = std::move($1); }
+        { $$ = std::move($1);
+          $$->setLocation(@$); }
     | func_decl ";"
-        { $$ = std::move($1); }
+        { $$ = std::move($1);
+          $$->setLocation(@$); }
+    | error ";" /* on error, skip until ';' is read */
+        { yyerrok; yyclearin; $$ = std::make_unique<explain::AST::Entry>(); }
     ;
 
 
 stmt
     : assignment_stmt
-        { $$ = std::move($1); }
+        { $$ = std::move($1);
+          $$->setLocation(@$); }
     | if_stmt
-        { $$ = std::move($1); }
+        { $$ = std::move($1);
+          $$->setLocation(@$); }
     | while_stmt
-        { $$ = std::move($1); }
+        { $$ = std::move($1);
+          $$->setLocation(@$); }
     | return_stmt
-        { $$ = std::move($1); }
+        { $$ = std::move($1);
+          $$->setLocation(@$); }
     | io_stmt
-        { $$ = std::move($1); }
+        { $$ = std::move($1);
+          $$->setLocation(@$); }
     ;
 
 
@@ -181,128 +190,164 @@ number
 
 assignment_stmt
     : ident ":=" expr
-        { $$ = std::make_unique<explain::AST::AssignmentStmt>(std::move($1), std::move($3)); }
+        { $$ = std::make_unique<explain::AST::AssignmentStmt>(std::move($1), std::move($3));
+          $$->setLocation(@$); }
     ;
 
 
 if_stmt
     : "if" cond block_stmt "endi"
-        { $$ = std::make_unique<explain::AST::IfStmt>(std::move($2), std::move($3), nullptr); }
+        { $$ = std::make_unique<explain::AST::IfStmt>(std::move($2), std::move($3), nullptr);
+          $$->setLocation(@$); }
     | "if" cond block_stmt "else" block_stmt "endi"
-        { $$ = std::make_unique<explain::AST::IfStmt>(std::move($2), std::move($3), std::move($5)); }
+        { $$ = std::make_unique<explain::AST::IfStmt>(std::move($2), std::move($3), std::move($5));
+          $$->setLocation(@$); }
     ;
 
 
 while_stmt
     : "while" cond block_stmt "endw"
-        { $$ = std::make_unique<explain::AST::WhileStmt>(std::move($2), std::move($3)); }
+        { $$ = std::make_unique<explain::AST::WhileStmt>(std::move($2), std::move($3));
+          $$->setLocation(@$); }
     ;
 
 
 return_stmt
     : "return" expr
-        { $$ = std::make_unique<explain::AST::ReturnStmt>(std::move($2)); }
+        { $$ = std::make_unique<explain::AST::ReturnStmt>(std::move($2));
+          $$->setLocation(@$); }
     ;
 
 
 io_stmt
     : "input" ident
-        { $$ = std::make_unique<explain::AST::IOStmt>(explain::AST::Operator::INPUT, std::move($2)); }
+        { $$ = std::make_unique<explain::AST::IOStmt>(explain::AST::Operator::INPUT, std::move($2));
+          $$->setLocation(@$); }
     | "output" ident
-        { $$ = std::make_unique<explain::AST::IOStmt>(explain::AST::Operator::OUTPUT, std::move($2)); }
+        { $$ = std::make_unique<explain::AST::IOStmt>(explain::AST::Operator::OUTPUT, std::move($2));
+          $$->setLocation(@$); }
     ;
 
 
 expr
     : func_call
-        { $$ = std::move($1); }
+        { $$ = std::move($1);
+          $$->setLocation(@$); }
     | ident
-        { $$ = std::make_unique<explain::AST::ExprIdent>(std::move($1)); }
+        { $$ = std::make_unique<explain::AST::ExprIdent>(std::move($1));
+          $$->setLocation(@$); }
     | number
-        { $$ = std::make_unique<explain::AST::ExprNumber>($1); }
+        { $$ = std::make_unique<explain::AST::ExprNumber>($1);
+          $$->setLocation(@$); }
     | "(" expr ")"
-        { $$ = std::move($2); }
+        { $$ = std::move($2);
+          $$->setLocation(@$); }
+    | "(" error ")"
+        { yyerrok; yyclearin; $$ = nullptr; }
     | expr_binop
-        { $$ = std::move($1); }
+        { $$ = std::move($1);
+          $$->setLocation(@$); }
     ;
 
 
 expr_binop
     : expr "+" expr
-        { $$ = std::make_unique<explain::AST::ExprBinOp>(explain::AST::Operator::PLUS, std::move($1), std::move($3)); }
+        { $$ = std::make_unique<explain::AST::ExprBinOp>(explain::AST::Operator::PLUS, std::move($1), std::move($3));
+          $$->setLocation(@$); }
     | expr "-" expr
-        { $$ = std::make_unique<explain::AST::ExprBinOp>(explain::AST::Operator::MINUS, std::move($1), std::move($3)); }
+        { $$ = std::make_unique<explain::AST::ExprBinOp>(explain::AST::Operator::MINUS, std::move($1), std::move($3));
+          $$->setLocation(@$); }
     | expr "*" expr
-        { $$ = std::make_unique<explain::AST::ExprBinOp>(explain::AST::Operator::TIMES, std::move($1), std::move($3)); }
+        { $$ = std::make_unique<explain::AST::ExprBinOp>(explain::AST::Operator::TIMES, std::move($1), std::move($3));
+          $$->setLocation(@$); }
     | expr "/" expr
-        { $$ = std::make_unique<explain::AST::ExprBinOp>(explain::AST::Operator::DIV, std::move($1), std::move($3)); }
+        { $$ = std::make_unique<explain::AST::ExprBinOp>(explain::AST::Operator::DIV, std::move($1), std::move($3));
+          $$->setLocation(@$); }
     ;
 
 
 cond
     : "(" cond ")"
-        { $$ = std::move($2); }
+        { $$ = std::move($2);
+          $$->setLocation(@$); }
     | cond_unop
-        { $$ = std::move($1); }
+        { $$ = std::move($1);
+          $$->setLocation(@$); }
     | cond_binop
-        { $$ = std::move($1); }
+        { $$ = std::move($1);
+          $$->setLocation(@$); }
     | cond_compop
-        { $$ = std::move($1); }
+        { $$ = std::move($1);
+          $$->setLocation(@$); }
     ;
 
 
 cond_unop
     : "!" cond
-        { $$ = std::make_unique<explain::AST::CondUnOp>(explain::AST::Operator::NOT, std::move($2)); }
+        { $$ = std::make_unique<explain::AST::CondUnOp>(explain::AST::Operator::NOT, std::move($2));
+          $$->setLocation(@$); }
     ;
 
 
 cond_binop
     : cond "and" cond
-        { $$ = std::make_unique<explain::AST::CondBinOp>(explain::AST::Operator::AND, std::move($1), std::move($3)); }
+        { $$ = std::make_unique<explain::AST::CondBinOp>(explain::AST::Operator::AND, std::move($1), std::move($3));
+          $$->setLocation(@$); }
     | cond "or" cond
-        { $$ = std::make_unique<explain::AST::CondBinOp>(explain::AST::Operator::OR, std::move($1), std::move($3)); }
+        { $$ = std::make_unique<explain::AST::CondBinOp>(explain::AST::Operator::OR, std::move($1), std::move($3));
+          $$->setLocation(@$); }
     ;
 
 
 cond_compop
     : expr "<" expr
-        { $$ = std::make_unique<explain::AST::CondCompOp>(explain::AST::Operator::LT, std::move($1), std::move($3)); }
+        { $$ = std::make_unique<explain::AST::CondCompOp>(explain::AST::Operator::LT, std::move($1), std::move($3));
+          $$->setLocation(@$); }
     | expr "<=" expr
-        { $$ = std::make_unique<explain::AST::CondCompOp>(explain::AST::Operator::LTEQ, std::move($1), std::move($3)); }
+        { $$ = std::make_unique<explain::AST::CondCompOp>(explain::AST::Operator::LTEQ, std::move($1), std::move($3));
+          $$->setLocation(@$); }
     | expr "==" expr
-        { $$ = std::make_unique<explain::AST::CondCompOp>(explain::AST::Operator::EQ, std::move($1), std::move($3)); }
+        { $$ = std::make_unique<explain::AST::CondCompOp>(explain::AST::Operator::EQ, std::move($1), std::move($3));
+          $$->setLocation(@$); }
     | expr ">=" expr
-        { $$ = std::make_unique<explain::AST::CondCompOp>(explain::AST::Operator::GTEQ, std::move($1), std::move($3)); }
+        { $$ = std::make_unique<explain::AST::CondCompOp>(explain::AST::Operator::GTEQ, std::move($1), std::move($3));
+          $$->setLocation(@$); }
     | expr ">" expr
-        { $$ = std::make_unique<explain::AST::CondCompOp>(explain::AST::Operator::GT, std::move($1), std::move($3)); }
+        { $$ = std::make_unique<explain::AST::CondCompOp>(explain::AST::Operator::GT, std::move($1), std::move($3));
+          $$->setLocation(@$); }
     ;
 
 func_decl
     : "fun" ident "(" func_decl_args ")" block_stmt "endf"
-        { $$ = std::make_unique<explain::AST::FuncDecl>(std::move($2), std::move($4), std::move($6)); }
+        { $$ = std::make_unique<explain::AST::FuncDecl>(std::move($2), std::move($4), std::move($6));
+          $$->setLocation(@$); }
     ;
 
 
 func_call
     : ident "(" func_call_args ")"
-        { $$ = std::make_unique<explain::AST::ExprFuncCall>(std::move($1), std::move($3)); }
+        { $$ = std::make_unique<explain::AST::ExprFuncCall>(std::move($1), std::move($3));
+          $$->setLocation(@$); }
     ;
 
 
 func_decl_args
     : %empty /* no argument */
-        { $$ = std::make_unique<explain::AST::FuncDeclArgs>(); }
+        { $$ = std::make_unique<explain::AST::FuncDeclArgs>();
+          $$->setLocation(@$); }
     | decl_arg_list
-        { $$ = std::move($1); }
+        { $$ = std::move($1);
+          $$->setLocation(@$); }
     ;
 
 
 func_call_args
     : %empty /* no argument */
-        { $$ = std::make_unique<explain::AST::FuncCallArgs>(); }
+        { $$ = std::make_unique<explain::AST::FuncCallArgs>();
+          $$->setLocation(@$); }
     | call_arg_list
-        { $$ = std::move($1); }
+        { $$ = std::move($1);
+          $$->setLocation(@$); }
     ;
 
 
@@ -325,7 +370,7 @@ call_arg_list
 %%
 
 void
-yy::parser::error(const location_type& l, const std::string& m)
+yy::parser::error(const location_type& loc, const std::string& msg)
 {
-    std::cerr << l << ": " << m << '\n';
+    drv.mi->error(msg, &loc);
 }

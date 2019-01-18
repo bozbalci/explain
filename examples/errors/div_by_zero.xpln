@@ -1,0 +1,3 @@
+x := 3/0;
+output x;
+return 1;

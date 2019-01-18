@@ -1,5 +1,9 @@
 #include "canonicalizer.hh"
 
+#define ASSERT_EXISTS(e) \
+    if (!e) \
+        mi->fatal_error("malformed syntax tree")
+
 namespace explain
 {
 
@@ -49,7 +53,7 @@ Canonicalizer::visit(AST::FuncDeclArgs *args)
     const auto duplicate = std::adjacent_find(copy.begin(), copy.end());
 
     if (duplicate != copy.end())
-        mi->error("formal parameter '" + *duplicate + "' is declared more than once");
+        mi->error("formal parameter '" + *duplicate + "' is declared more than once", &args->location);
 }
 
 void
@@ -74,75 +78,48 @@ Canonicalizer::visit(AST::Stmt *stmt)
 void
 Canonicalizer::visit(AST::FuncDecl *decl)
 {
+    ASSERT_EXISTS(decl->args);
+    ASSERT_EXISTS(decl->body);
 
-    if (std::find(registeredFuncNames.begin(), registeredFuncNames.end(), decl->ident) != registeredFuncNames.end())
+    auto it = registeredFunctions.find(decl->ident);
+
+    if (it != registeredFunctions.end())
     {
-        mi->error("redefinition of function '" + decl->ident + "'");
+        mi->error("redefinition of function '" + decl->ident + "'", &decl->location);
+        mi->note("previous declaration was here", it->second);
 
         return;
     }
 
-    registeredFuncNames.push_back(decl->ident);
+    registeredFunctions.insert(std::pair<std::string, yy::location *>(decl->ident, &decl->location));
     encounteredReturnStmt = false;
 
     if (!decl->isXplnEntry && decl->ident == "main")
         decl->ident = mangledMain;
 
-    if (!decl->args)
-    {
-        mi->error("missing FuncDeclArgs in FuncDecl");
-
-        return;
-    }
     decl->args->accept(*this);
-
-    if (!decl->body)
-    {
-        mi->error("missing BlockStmt in FuncDecl");
-
-        return;
-    }
     decl->body->accept(*this);
 
     if (!encounteredReturnStmt)
-    {
-        mi->error("no ReturnStmt inside block of FuncDecl");
-
-        return;
-    }
-
+        mi->warning("function '" + decl->ident + "' is missing a return statement", &decl->location);
     encounteredReturnStmt = false;
 }
 
 void
 Canonicalizer::visit(AST::AssignmentStmt *stmt)
 {
-    if (!stmt->expr)
-    {
-        mi->error("missing Expr in AssignmentStmt");
+    ASSERT_EXISTS(stmt->expr);
 
-        return;
-    }
     stmt->expr->accept(*this);
 }
 
 void
 Canonicalizer::visit(AST::IfStmt *stmt)
 {
-    if (!stmt->cond)
-    {
-        mi->error("missing Cond in IfStmt");
+    ASSERT_EXISTS(stmt->cond);
+    ASSERT_EXISTS(stmt->then);
 
-        return;
-    }
     stmt->cond->accept(*this);
-
-    if (!stmt->then)
-    {
-        mi->error("missing BlockStmt (`then`) in IfStmt");
-
-        return;
-    }
     stmt->then->accept(*this);
 
     if (stmt->otherwise)
@@ -152,32 +129,18 @@ Canonicalizer::visit(AST::IfStmt *stmt)
 void
 Canonicalizer::visit(AST::WhileStmt *stmt)
 {
-    if (!stmt->cond)
-    {
-        mi->error("missing Cond in WhileStmt");
+    ASSERT_EXISTS(stmt->cond);
+    ASSERT_EXISTS(stmt->loop);
 
-        return;
-    }
     stmt->cond->accept(*this);
-
-    if (!stmt->loop)
-    {
-        mi->error("missing BlockStmt in WhileStmt");
-
-        return;
-    }
     stmt->loop->accept(*this);
 }
 
 void
 Canonicalizer::visit(AST::ReturnStmt *stmt)
 {
-    if (!stmt->expr)
-    {
-        mi->error("missing Expr in ReturnStmt");
+    ASSERT_EXISTS(stmt->expr);
 
-        return;
-    }
     stmt->expr->accept(*this);
 
     encounteredReturnStmt = true;
@@ -192,7 +155,7 @@ Canonicalizer::visit(AST::IOStmt *stmt)
         case AST::Operator::OUTPUT:
             break;
         default:
-            mi->error("invalid operator supplied to IOStmt");
+            mi->fatal_error("malformed syntax tree");
     }
 }
 
@@ -205,6 +168,9 @@ Canonicalizer::visit(AST::Expr *expr)
 void
 Canonicalizer::visit(AST::ExprBinOp *expr)
 {
+    ASSERT_EXISTS(expr->lhs);
+    ASSERT_EXISTS(expr->rhs);
+
     switch (expr->op)
     {
         case AST::Operator::PLUS:
@@ -213,15 +179,18 @@ Canonicalizer::visit(AST::ExprBinOp *expr)
         case AST::Operator::DIV:
             break;
         default:
-            mi->error("invalid operator supplied to ExprBinOp");
+            mi->fatal_error("malformed syntax tree");
     }
 
-    if (!expr->lhs || !expr->rhs)
+    // Check for division by zero
+    if (expr->rhs->getNodeType() == AST::NodeType::EXPR_NUMBER)
     {
-        mi->error("missing operands to ExprBinOp");
-
-        return;
+        auto ExprNum = dynamic_cast<AST::ExprNumber *>(expr->rhs.get());
+        if (ExprNum->number == 0)
+            mi->warning("division by zero is undefined", &expr->location);
+        delete ExprNum;
     }
+
     expr->lhs->accept(*this);
     expr->rhs->accept(*this);
 }
@@ -241,15 +210,11 @@ Canonicalizer::visit(AST::ExprNumber *expr)
 void
 Canonicalizer::visit(AST::ExprFuncCall *expr)
 {
+    ASSERT_EXISTS(expr->args);
+
     if (expr->ident == "main")
         expr->ident = mangledMain;
 
-    if (!expr->args)
-    {
-        mi->error("missing FuncCallArgs in ExprFuncCall");
-
-        return;
-    }
     expr->args->accept(*this);
 }
 
@@ -262,41 +227,34 @@ Canonicalizer::visit(AST::Cond *cond)
 void
 Canonicalizer::visit(AST::CondUnOp *cond)
 {
+    ASSERT_EXISTS(cond->cond);
+
     switch (cond->op)
     {
         case AST::Operator::NOT:
             break;
         default:
-            mi->error("invalid operator supplied to CondBinOp");
+            mi->error("malformed syntax tree");
     }
 
-    if (!cond->cond)
-    {
-        mi->error("missing operand to CondUnOp");
-
-        return;
-    }
     cond->cond->accept(*this);
 }
 
 void
 Canonicalizer::visit(AST::CondBinOp *cond)
 {
+    ASSERT_EXISTS(cond->lhs);
+    ASSERT_EXISTS(cond->rhs);
+
     switch (cond->op)
     {
         case AST::Operator::AND:
         case AST::Operator::OR:
             break;
         default:
-            mi->error("invalid operator supplied to CondBinOp");
+            mi->error("malformed syntax tree");
     }
 
-    if (!cond->lhs || !cond->rhs)
-    {
-        mi->error("missing operands to CondBinOp");
-
-        return;
-    }
     cond->lhs->accept(*this);
     cond->rhs->accept(*this);
 }
@@ -304,6 +262,9 @@ Canonicalizer::visit(AST::CondBinOp *cond)
 void
 Canonicalizer::visit(AST::CondCompOp *cond)
 {
+    ASSERT_EXISTS(cond->lhs);
+    ASSERT_EXISTS(cond->rhs);
+
     switch (cond->op)
     {
         case AST::Operator::LT:
@@ -313,15 +274,9 @@ Canonicalizer::visit(AST::CondCompOp *cond)
         case AST::Operator::GT:
             break;
         default:
-            mi->error("invalid operator supplied to CondCompOp");
+            mi->error("malformed syntax tree");
     }
 
-    if (!cond->lhs || !cond->rhs)
-    {
-        mi->error("missing operands to CondCompOp");
-
-        return;
-    }
     cond->lhs->accept(*this);
     cond->rhs->accept(*this);
 }

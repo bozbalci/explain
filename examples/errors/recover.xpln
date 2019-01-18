@@ -1,0 +1,13 @@
+FUN FOO(X, Y)
+    FUN BAR(X, Y)
+        RETURN X + Y;
+    ENDF;
+
+    IF X := 5;
+
+    # This is not a comment :)
+    RETURN BAR(X, Y);
+ENDF;
+
+IF X := 5;
+OUTPUT 42;

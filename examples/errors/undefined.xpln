@@ -1,0 +1,9 @@
+fun d()
+    output a;
+    input a;
+    return a;
+endf;
+
+x := b(5);
+y := x;
+return 11;

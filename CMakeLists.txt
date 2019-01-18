@@ -47,9 +47,11 @@ set(HEADER_COMMON
 
 flex_target(Scanner src/scanner.ll
         ${CMAKE_CURRENT_BINARY_DIR}/scanner.cc
-        COMPILE_FLAGS "-i")
+        COMPILE_FLAGS "-i") # Case insensitive scanning
 bison_target(Parser src/parser.yy
-        ${CMAKE_CURRENT_BINARY_DIR}/parser.cc)
+        ${CMAKE_CURRENT_BINARY_DIR}/parser.cc
+        COMPILE_FLAGS "-v" # Verbose description of parser states and actions
+        )
 add_flex_bison_dependency(Scanner Parser)
 
 add_executable(explain

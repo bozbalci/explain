@@ -1,0 +1,6 @@
+fun foo(a,a,a)
+    return a+a+a;
+endf;
+
+z := foo(1,2,3);
+return z;

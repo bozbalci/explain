@@ -6,15 +6,15 @@ explain is an _industrial grade_ compiler for [XPLN]. It is built using `flex`, 
 
 ## Features
 
-* Error reporting
-* Optimizations
+* Detailed error reporting with source locations, error recovery during parsing
+* Optimizations (global value numbering, CFG simplification, instruction combining, constant folding and propagation,
+etc.)
 * Pretty-printer for the abstract syntax tree
-* Emitting LLVM intermediate representation
+* Option to emit LLVM intermediate representation
 * Native code generation for X86, X86-64, PowerPC, PowerPC-64, ARM, MIPS and many more architectures
 
 ## Planned features
 
-* Source locations in the AST for better error reporting
 * Support for the DWARF debugging standard
 * More aggressive optimizations including function inlining
 * Just-in-time compilation and interpreter support
