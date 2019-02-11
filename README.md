@@ -4,6 +4,8 @@
 
 explain is an _industrial grade_ compiler for [XPLN]. It is built using `flex`, `bison` and LLVM.
 
+Update: explain has won the ["Gazozuna Kompaylır"](https://github.com/bozsahin/ceng444) award!
+
 [XPLN]: https://github.com/bozsahin/ceng444/blob/master/project-material/xpl-specs-fall2018.pdf
 
 ## Features
